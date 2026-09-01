@@ -1,0 +1,7 @@
+@extends('layouts.app')
+@section('title', 'Reporte de auditoría')
+@section('page_title', 'Reporte de auditoría')
+@section('content')
+<div class="mb-4"><form method="GET" class="max-w-md"><input name="q" value="{{ $q }}" placeholder="Filtrar por serial..." class="h-10 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm shadow-card"></form></div>
+<div class="overflow-x-auto rounded-3xl border border-slate-200 bg-white shadow-card"><table class="w-full min-w-[800px] text-left text-sm"><thead class="border-b border-slate-100 bg-slate-50 text-xs uppercase text-slate-400"><tr><th class="px-5 py-3">Fecha</th><th class="px-5 py-3">Serial</th><th class="px-5 py-3">Equipo</th><th class="px-5 py-3">Usuario</th><th class="px-5 py-3">Sistema operativo</th><th class="px-5 py-3">Observaciones</th></tr></thead><tbody class="divide-y divide-slate-50">@forelse($auditorias as $auditoria)<tr class="hover:bg-brand-50/40"><td class="px-5 py-3">{{ optional($auditoria->FechaAuditoria)->format('d/m/Y H:i') }}</td><td class="px-5 py-3 font-mono text-xs">{{ $auditoria->Hw_Serial }}</td><td class="px-5 py-3 font-semibold">{{ $auditoria->Hw_Nombre }}</td><td class="px-5 py-3">{{ $auditoria->UsuarioInvNombre }}</td><td class="px-5 py-3">{{ $auditoria->SistemaOperativo }}</td><td class="px-5 py-3">{{ $auditoria->Observaciones }}</td></tr>@empty<tr><td colspan="6" class="px-5 py-10 text-center text-slate-400">No hay auditorías registradas.</td></tr>@endforelse</tbody></table></div>
+@endsection

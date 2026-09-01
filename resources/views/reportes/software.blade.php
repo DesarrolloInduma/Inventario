@@ -1,0 +1,6 @@
+@extends('layouts.app')
+@section('title', 'Reporte de software')
+@section('page_title', 'Reporte de software licenciado')
+@section('content')
+<div class="overflow-x-auto rounded-3xl border border-slate-200 bg-white shadow-card"><table class="w-full min-w-[650px] text-left text-sm"><thead class="border-b border-slate-100 bg-slate-50 text-xs uppercase text-slate-400"><tr><th class="px-5 py-3">Software</th><th class="px-5 py-3">Versión</th><th class="px-5 py-3">Cantidad</th><th class="px-5 py-3">Asignadas</th><th class="px-5 py-3">Disponibles</th></tr></thead><tbody class="divide-y divide-slate-50">@forelse($software as $licencia)<tr class="hover:bg-brand-50/40"><td class="px-5 py-3 font-semibold">{{ $licencia->Software_Nombre }}</td><td class="px-5 py-3">{{ $licencia->Software_Version ?? '—' }}</td><td class="px-5 py-3">{{ $licencia->Software_Cantidad }}</td><td class="px-5 py-3">{{ $licencia->hardwares_count }}</td><td class="px-5 py-3 font-semibold text-emerald-600">{{ max(0, $licencia->Software_Cantidad - $licencia->hardwares_count) }}</td></tr>@empty<tr><td colspan="5" class="px-5 py-10 text-center text-slate-400">No hay licencias registradas.</td></tr>@endforelse</tbody></table></div>
+@endsection
