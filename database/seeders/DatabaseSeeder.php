@@ -17,6 +17,7 @@ use App\Models\Ubicacion;
 use App\Models\User;
 use App\Models\UsuarioInv;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -25,15 +26,17 @@ class DatabaseSeeder extends Seeder
         User::create([
             'name' => 'Administrador',
             'email' => 'admin@inventario.local',
-            'password' => 'admin123',
+            'password' => Hash::make('admin123'),
             'role' => 'admin',
+            'activo' => true,
         ]);
 
         User::create([
             'name' => 'Consulta',
             'email' => 'consulta@inventario.local',
-            'password' => 'consulta123',
+            'password' => Hash::make('consulta123'),
             'role' => 'consulta',
+            'activo' => true,
         ]);
 
         $tipos = ['Portátil', 'Escritorio', 'All in One', 'Servidor', 'Impresora', 'Tableta'];
