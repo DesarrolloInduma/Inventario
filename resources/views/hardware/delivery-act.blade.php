@@ -57,9 +57,9 @@
         <tr><th>Nombre</th><td>{{ $hardware->Hw_Nombre }}</td></tr>
         <tr><th>Tipo</th><td>{{ $hardware->tipo->Nombre ?? 'Sin registrar' }}</td></tr>
         <tr><th>Marca / modelo</th><td>{{ $hardware->modelo->marca->Nombre ?? '' }} {{ $hardware->modelo->Nombre ?? '' }}</td></tr>
-        <tr><th>Procesador</th><td>{{ $hardware->procesador->Nombre ?? 'Sin registrar' }}</td></tr>
+        <tr><th>Procesador</th><td>{{ $hardware->procesador?->Nombre ?? 'Sin registrar' }}</td></tr>
         <tr><th>RAM / disco</th><td>{{ $hardware->Hw_Ram ?? 'Sin registrar' }} / {{ $hardware->Hw_Disco_Duro ?? 'Sin registrar' }}</td></tr>
-        <tr><th>Monitor</th><td>{{ $hardware->monitor->MonitorID ?? 'Sin monitor' }} {{ $hardware->monitor->Monitor_Modelo ?? '' }}</td></tr>
+        <tr><th>Monitor</th><td>{{ $hardware->monitor?->MonitorID ?? 'Sin monitor' }} {{ $hardware->monitor?->Monitor_Modelo ?? '' }}</td></tr>
     </table>
 
     <h2>Accesorios y software</h2>

@@ -23,8 +23,7 @@ class CatalogoController extends Controller
             'model' => 'Modelo', 'titulo' => 'Modelos',
             'pk' => 'ModeloID',
             'campos' => [
-                ['col' => 'Nombre', 'label' => 'Nombre del modelo', 'tipo' => 'text', 'req' => true, 'max' => 50, 'unique_with' => 'MarcaID'],
-                ['col' => 'MarcaID', 'label' => 'Marca asociada', 'tipo' => 'number', 'req' => false],
+                ['col' => 'Nombre', 'label' => 'Nombre del modelo', 'tipo' => 'text', 'req' => true, 'max' => 50, 'unique' => true],
             ],
         ],
         'procesadores' => [

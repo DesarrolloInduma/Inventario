@@ -63,7 +63,7 @@
                 ['Tipo', $hardware->tipo->Nombre ?? null, 'bi-tags'],
                 ['Marca / Modelo', trim(($hardware->modelo?->marca?->Nombre ?? '') . ' ' . ($hardware->modelo->Nombre ?? '')) ?: null, 'bi-box'],
                 ['Serial cargador', $hardware->Hw_Serial_Cargador, 'bi-plug'],
-                ['Procesador', ($hardware->procesador->Nombre ?? null) . (($hardware->procesador->Velocidad ?? null) ? ' · ' . $hardware->procesador->Velocidad : ''), 'bi-cpu'],
+                ['Procesador', trim(($hardware->procesador?->Nombre ?? '') . (($hardware->procesador?->Velocidad ?? null) ? ' · ' . $hardware->procesador->Velocidad : '')) ?: null, 'bi-cpu'],
                 ['RAM', $hardware->Hw_Ram, 'bi-memory'],
                 ['Disco duro', $hardware->Hw_Disco_Duro, 'bi-device-hdd'],
                 ['Placa', $hardware->Hw_Placa, 'bi-upc'],
@@ -87,8 +87,8 @@
         </header>
         <dl class="divide-y divide-slate-50 px-6">
             @foreach([
-                ['Usuario asignado', ($hardware->usuarioInv->UsuarioInvNombre ?? null) . (($hardware->usuarioInv->UsuarioInvArea ?? null) ? ' · ' . $hardware->usuarioInv->UsuarioInvArea : ''), 'bi-person-check'],
-                ['Monitor', trim(($hardware->monitor->MonitorID ?? '') . ' ' . ($hardware->monitor->Monitor_Modelo ?? '')) ?: null, 'bi-display'],
+                ['Usuario asignado', trim(($hardware->usuarioInv?->UsuarioInvNombre ?? '') . (($hardware->usuarioInv?->UsuarioInvArea ?? null) ? ' · ' . $hardware->usuarioInv->UsuarioInvArea : '')) ?: null, 'bi-person-check'],
+                ['Monitor', trim(($hardware->monitor?->MonitorID ?? '') . ' ' . ($hardware->monitor?->Monitor_Modelo ?? '')) ?: null, 'bi-display'],
                 ['Compra', optional($hardware->Hw_FechaCompra)->format('d/m/Y') ? optional($hardware->Hw_FechaCompra)->format('d/m/Y') . ' · $' . number_format($hardware->Hw_ValorCompra) : null, 'bi-cart-check'],
                 ['Garantía hasta', 'vencimiento', 'bi-shield-check'],
                 ['Propietario', $hardware->propietario->Nombre ?? null, 'bi-building'],

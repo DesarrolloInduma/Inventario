@@ -385,4 +385,65 @@ class HardwareActaAndSerialCargadorTest extends TestCase
         ]);
         $this->assertFileDoesNotExist(storage_path("app/public/{$acta->archivo_path}"));
     }
+
+    public function test_printer_can_be_created_with_only_general_information(): void
+    {
+        $user = User::factory()->create(['role' => 'admin']);
+        $tipo = Tipo::create(['Nombre' => 'Impresora']);
+        $modelo = Modelo::create(['Nombre' => 'LaserJet']);
+        $proveedor = \App\Models\Proveedor::create(['ProveedorID' => 'PROV-P', 'Nombre' => 'Proveedor SAS']);
+        $propietario = \App\Models\Propietario::create(['Nombre' => 'INDUMA']);
+        $leasing = \App\Models\Leasing::create([
+            'Entidad' => 'Leasing Bancolombia',
+            'Contrato' => 'C-PRINT',
+            'FechaInicio' => now()->toDateString(),
+            'FechaVencimiento' => now()->addYear()->toDateString(),
+        ]);
+
+        $response = $this->actingAs($user)->post(route('hardware.store'), [
+            'Hw_Serial' => 'IMP-001',
+            'Hw_Nombre' => 'Impresora piso 2',
+            'TipoID' => $tipo->TipoID,
+            'ModeloID' => $modelo->ModeloID,
+            'usuario_nombre' => 'No debe guardarse',
+            'procesador_nombre' => 'No aplica',
+            'observacion' => 'No aplica',
+        ]);
+
+        $response->assertRedirect(route('hardware.show', 'IMP-001'));
+        $this->assertDatabaseHas('Hardware', [
+            'Hw_Serial' => 'IMP-001',
+            'Hw_Nombre' => 'Impresora piso 2',
+            'TipoID' => $tipo->TipoID,
+            'ModeloID' => $modelo->ModeloID,
+            'ProcesadorID' => null,
+            'UsuarioInvID' => null,
+            'MonitorID' => null,
+            'PropietarioID' => $propietario->PropietarioID,
+            'ProveedorID' => $proveedor->ProveedorID,
+            'LeasingID' => $leasing->LeasingID,
+        ]);
+        $this->assertDatabaseMissing('UsuarioInv', ['UsuarioInvNombre' => 'No debe guardarse']);
+        $this->assertDatabaseCount('Observaciones', 0);
+    }
+
+    public function test_model_catalog_only_asks_for_the_name(): void
+    {
+        $user = User::factory()->create(['role' => 'admin']);
+
+        $response = $this->actingAs($user)->post(route('catalogo.store', 'modelos'), [
+            'Nombre' => 'OfficeJet Pro',
+        ]);
+
+        $response->assertRedirect(route('catalogo.index', 'modelos'));
+        $this->assertDatabaseHas('Modelo', [
+            'Nombre' => 'OfficeJet Pro',
+            'MarcaID' => null,
+        ]);
+
+        $page = $this->actingAs($user)->get(route('catalogo.index', 'modelos'));
+        $page->assertOk();
+        $page->assertSee('Nombre del modelo');
+        $page->assertDontSee('Marca asociada');
+    }
 }

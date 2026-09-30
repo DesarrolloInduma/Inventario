@@ -70,23 +70,32 @@ class HardwareController extends Controller
 
     public function store(Request $request)
     {
-        $request->merge(['ProcesadorID' => $this->saveManualProcessor($request)]);
-        $request->merge(['UsuarioInvID' => $this->saveManualUser($request)]);
-        $data = $this->validated($request);
+        $esImpresora = $this->esImpresora($request);
+        if ($esImpresora) {
+            $this->olvidarDatosNoGenerales($request);
+        } else {
+            $request->merge(['ProcesadorID' => $this->saveManualProcessor($request)]);
+            $request->merge(['UsuarioInvID' => $this->saveManualUser($request)]);
+        }
+        $data = $this->validated($request, null, $esImpresora);
 
         $hardware = Hardware::create($data);
-        $hardware->dispositivos()->sync($request->input('dispositivos', []));
-        $hardware->softwaresNoLicenciados()->sync($request->input('software_no_licenciado', []));
-        if ($request->filled('observacion')) {
+        if (!$esImpresora) {
+            $hardware->dispositivos()->sync($request->input('dispositivos', []));
+            $hardware->softwaresNoLicenciados()->sync($request->input('software_no_licenciado', []));
+        }
+        if (!$esImpresora && $request->filled('observacion')) {
             $hardware->observaciones()->create([
                 'Observacion_Detalle' => $request->input('observacion'),
                 'Observacion_Fecha' => $request->input('observacion_fecha') ?: now()->toDateString(),
             ]);
         }
-        foreach ($request->input('software_licenciado', []) as $softwareId) {
-            $software = Software_Licenciado::find($softwareId);
-            if ($software && ($software->Software_Cantidad === null || $software->hardwares()->count() < (int) $software->Software_Cantidad)) {
-                $hardware->softwaresLicenciados()->syncWithoutDetaching([$softwareId]);
+        if (!$esImpresora) {
+            foreach ($request->input('software_licenciado', []) as $softwareId) {
+                $software = Software_Licenciado::find($softwareId);
+                if ($software && ($software->Software_Cantidad === null || $software->hardwares()->count() < (int) $software->Software_Cantidad)) {
+                    $hardware->softwaresLicenciados()->syncWithoutDetaching([$softwareId]);
+                }
             }
         }
 
@@ -153,15 +162,20 @@ class HardwareController extends Controller
     public function update(Request $request, string $serial)
     {
         $hardware = Hardware::findOrFail($serial);
-        $request->merge(['ProcesadorID' => $this->saveManualProcessor($request)]);
-        $request->merge(['UsuarioInvID' => $this->saveManualUser($request)]);
-        $data = $this->validated($request, $serial);
+        $esImpresora = $this->esImpresora($request);
+        if ($esImpresora) {
+            $this->olvidarDatosNoGenerales($request);
+        } else {
+            $request->merge(['ProcesadorID' => $this->saveManualProcessor($request)]);
+            $request->merge(['UsuarioInvID' => $this->saveManualUser($request)]);
+        }
+        $data = $this->validated($request, $serial, $esImpresora);
 
         unset($data['Hw_Serial']);
         $hardware->update($data);
-        $hardware->dispositivos()->sync($request->input('dispositivos', []));
-        $hardware->softwaresNoLicenciados()->sync($request->input('software_no_licenciado', []));
-        $hardware->softwaresLicenciados()->sync($request->input('software_licenciado', []));
+        $hardware->dispositivos()->sync($esImpresora ? [] : $request->input('dispositivos', []));
+        $hardware->softwaresNoLicenciados()->sync($esImpresora ? [] : $request->input('software_no_licenciado', []));
+        $hardware->softwaresLicenciados()->sync($esImpresora ? [] : $request->input('software_licenciado', []));
 
         $this->handleActaUpload($request, $hardware, 'acta_archivo', 'acta_titulo');
 
@@ -345,7 +359,40 @@ class HardwareController extends Controller
         return back()->with('ok', 'Acta eliminada correctamente.');
     }
 
-    private function validated(Request $request, ?string $ignoreSerial = null): array
+    private function esImpresora(Request $request): bool
+    {
+        $tipo = Tipo::query()->find($request->input('TipoID'));
+
+        return $tipo !== null && strcasecmp(trim((string) $tipo->Nombre), 'Impresora') === 0;
+    }
+
+    private function olvidarDatosNoGenerales(Request $request): void
+    {
+        $request->replace($request->except([
+            'usuario_id',
+            'usuario_nombre',
+            'usuario_cargo',
+            'usuario_area',
+            'usuario_correo',
+            'UsuarioInvID',
+            'procesador_nombre',
+            'procesador_velocidad',
+            'ProcesadorID',
+            'Hw_Ram',
+            'Hw_Disco_Duro',
+            'Hw_Estado',
+            'MacEthernet',
+            'MacWireless',
+            'MonitorID',
+            'dispositivos',
+            'observacion',
+            'observacion_fecha',
+            'software_licenciado',
+            'software_no_licenciado',
+        ]));
+    }
+
+    private function validated(Request $request, ?string $ignoreSerial = null, bool $esImpresora = false): array
     {
         $serialUnique = Rule::unique('Hardware', 'Hw_Serial');
         if ($ignoreSerial !== null) {
@@ -356,7 +403,9 @@ class HardwareController extends Controller
             'Hw_Serial' => ['required', 'string', 'max:50', $serialUnique],
             'Hw_Serial_Cargador' => ['nullable', 'string', 'max:50'],
             'Hw_Nombre' => ['required', 'string', 'max:50'],
-            'ProcesadorID' => ['required', 'integer', 'exists:Procesador,ProcesadorID'],
+            'ProcesadorID' => $esImpresora
+                ? ['nullable', 'integer', 'exists:Procesador,ProcesadorID']
+                : ['required', 'integer', 'exists:Procesador,ProcesadorID'],
             'Hw_Ram' => ['nullable', 'string', 'max:50'],
             'Hw_Disco_Duro' => ['nullable', 'string', 'max:50'],
             'Hw_FechaCompra' => ['nullable', 'date'],
@@ -365,7 +414,9 @@ class HardwareController extends Controller
             'TipoID' => ['required', 'integer', 'exists:Tipo,TipoID'],
             'ModeloID' => ['required', 'integer', 'exists:Modelo,ModeloID'],
             'MonitorID' => ['nullable', 'string', 'exists:Monitor,MonitorID'],
-            'UsuarioInvID' => ['required', 'string', 'exists:UsuarioInv,UsuarioInvID'],
+            'UsuarioInvID' => $esImpresora
+                ? ['nullable', 'string', 'exists:UsuarioInv,UsuarioInvID']
+                : ['required', 'string', 'exists:UsuarioInv,UsuarioInvID'],
             'PropietarioID' => ['nullable', 'integer', 'exists:Propietario,PropietarioID'],
             'ProveedorID' => ['nullable', 'string', 'exists:Proveedor,ProveedorID'],
             'LeasingID' => ['nullable', 'integer', 'exists:Leasing,LeasingID'],
@@ -386,7 +437,18 @@ class HardwareController extends Controller
         $data['Hw_FechaCompra'] ??= now()->toDateString();
         $data['Hw_ValorCompra'] ??= 0;
         $data['Hw_FechaGarantiaFin'] ??= now()->addYear()->toDateString();
-        $data['MonitorID'] ??= Monitor::query()->value('MonitorID');
+        if ($esImpresora) {
+            $data['ProcesadorID'] = null;
+            $data['UsuarioInvID'] = null;
+            $data['MonitorID'] = null;
+            $data['Hw_Ram'] = null;
+            $data['Hw_Disco_Duro'] = null;
+            $data['Hw_Estado'] = null;
+            $data['MacEthernet'] = null;
+            $data['MacWireless'] = null;
+        } else {
+            $data['MonitorID'] ??= Monitor::query()->value('MonitorID');
+        }
         $data['PropietarioID'] ??= Propietario::query()->value('PropietarioID');
         $data['ProveedorID'] ??= Proveedor::query()->value('ProveedorID');
         $data['LeasingID'] ??= Leasing::query()->value('LeasingID');
