@@ -26,9 +26,25 @@ class HardwareController extends Controller
 {
     public function index(Request $request)
     {
+        return $this->indexModulo($request, 'computadores');
+    }
+
+    public function impresoras(Request $request)
+    {
+        return $this->indexModulo($request, 'impresoras');
+    }
+
+    public function camaras(Request $request)
+    {
+        return $this->indexModulo($request, 'camaras');
+    }
+
+    private function indexModulo(Request $request, string $modulo)
+    {
         $q = trim((string) $request->query('q'));
 
-        $hardware = Hardware::with(['tipo', 'modelo.marca', 'usuarioInv', 'ubicacion'])
+        $hardware = Hardware::with(['tipo', 'modelo', 'usuarioInv', 'ubicacion'])
+            ->whereIn('TipoID', $this->tiposPorModulo($modulo)->pluck('TipoID'))
             ->when($q !== '', function ($query) use ($q) {
                 $query->where(function ($sub) use ($q) {
                     $sub->where('Hw_Serial', 'like', "%{$q}%")
@@ -45,15 +61,31 @@ class HardwareController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return view('hardware.index', compact('hardware', 'q'));
+        return view('hardware.index', compact('hardware', 'q', 'modulo'));
     }
 
     public function create()
     {
+        return $this->createParaModulo('computadores');
+    }
+
+    public function createImpresora()
+    {
+        return $this->createParaModulo('impresoras');
+    }
+
+    public function createCamara()
+    {
+        return $this->createParaModulo('camaras');
+    }
+
+    private function createParaModulo(string $modulo)
+    {
         return view('hardware.create', [
             'hardware' => new Hardware(),
-            'tipos' => Tipo::orderBy('Nombre')->get(),
-            'modelos' => Modelo::with('marca')->orderBy('Nombre')->get(),
+            'modulo' => $modulo,
+            'tipos' => $this->tiposPorModulo($modulo),
+            'modelos' => Modelo::orderBy('Nombre')->get(),
             'procesadores' => Procesador::orderBy('Nombre')->get(),
             'monitores' => Monitor::orderBy('MonitorID')->get(),
             'usuarios' => UsuarioInv::orderBy('UsuarioInvNombre')->get(),
@@ -70,27 +102,43 @@ class HardwareController extends Controller
 
     public function store(Request $request)
     {
-        $esImpresora = $this->esImpresora($request);
-        if ($esImpresora) {
+        return $this->storeParaModulo($request, $this->moduloParaTipo((int) $request->input('TipoID')));
+    }
+
+    public function storeImpresora(Request $request)
+    {
+        return $this->storeParaModulo($request, 'impresoras');
+    }
+
+    public function storeCamara(Request $request)
+    {
+        return $this->storeParaModulo($request, 'camaras');
+    }
+
+    private function storeParaModulo(Request $request, string $modulo)
+    {
+        $this->validarTipoDelModulo($request, $modulo);
+        $esSimple = $modulo !== 'computadores';
+        if ($esSimple) {
             $this->olvidarDatosNoGenerales($request);
         } else {
             $request->merge(['ProcesadorID' => $this->saveManualProcessor($request)]);
             $request->merge(['UsuarioInvID' => $this->saveManualUser($request)]);
         }
-        $data = $this->validated($request, null, $esImpresora);
+        $data = $this->validated($request, null, $esSimple, $modulo);
 
         $hardware = Hardware::create($data);
-        if (!$esImpresora) {
+        if (!$esSimple) {
             $hardware->dispositivos()->sync($request->input('dispositivos', []));
             $hardware->softwaresNoLicenciados()->sync($request->input('software_no_licenciado', []));
         }
-        if (!$esImpresora && $request->filled('observacion')) {
+        if (!$esSimple && $request->filled('observacion')) {
             $hardware->observaciones()->create([
                 'Observacion_Detalle' => $request->input('observacion'),
                 'Observacion_Fecha' => $request->input('observacion_fecha') ?: now()->toDateString(),
             ]);
         }
-        if (!$esImpresora) {
+        if (!$esSimple) {
             foreach ($request->input('software_licenciado', []) as $softwareId) {
                 $software = Software_Licenciado::find($softwareId);
                 if ($software && ($software->Software_Cantidad === null || $software->hardwares()->count() < (int) $software->Software_Cantidad)) {
@@ -109,7 +157,7 @@ class HardwareController extends Controller
     public function show(string $serial)
     {
         $hardware = Hardware::with([
-            'tipo', 'procesador', 'modelo.marca', 'monitor', 'usuarioInv',
+            'tipo', 'procesador', 'modelo', 'monitor', 'usuarioInv',
             'propietario', 'proveedor', 'leasing', 'ubicacion', 'seguro',
             'softwaresLicenciados', 'softwaresNoLicenciados',
             'dispositivos', 'mantenimientos', 'observaciones', 'actas',
@@ -124,7 +172,7 @@ class HardwareController extends Controller
     public function deliveryAct(Request $request, string $serial)
     {
         $hardware = Hardware::with([
-            'tipo', 'modelo.marca', 'procesador', 'monitor', 'usuarioInv',
+            'tipo', 'modelo', 'procesador', 'monitor', 'usuarioInv',
             'ubicacion', 'dispositivos', 'softwaresLicenciados', 'softwaresNoLicenciados',
             'actas',
         ])->findOrFail($serial);
@@ -140,11 +188,13 @@ class HardwareController extends Controller
     public function edit(string $serial)
     {
         $hardware = Hardware::with('actas')->findOrFail($serial);
+        $modulo = $this->moduloParaTipo((int) $hardware->TipoID);
 
         return view('hardware.edit', [
             'hardware' => $hardware,
-            'tipos' => Tipo::orderBy('Nombre')->get(),
-            'modelos' => Modelo::with('marca')->orderBy('Nombre')->get(),
+            'modulo' => $modulo,
+            'tipos' => $this->tiposPorModulo($modulo),
+            'modelos' => Modelo::orderBy('Nombre')->get(),
             'procesadores' => Procesador::orderBy('Nombre')->get(),
             'monitores' => Monitor::orderBy('MonitorID')->get(),
             'usuarios' => UsuarioInv::orderBy('UsuarioInvNombre')->get(),
@@ -162,20 +212,20 @@ class HardwareController extends Controller
     public function update(Request $request, string $serial)
     {
         $hardware = Hardware::findOrFail($serial);
-        $esImpresora = $this->esImpresora($request);
-        if ($esImpresora) {
+        $esSimple = $this->esTipoSimple($request->input('TipoID'));
+        if ($esSimple) {
             $this->olvidarDatosNoGenerales($request);
         } else {
             $request->merge(['ProcesadorID' => $this->saveManualProcessor($request)]);
             $request->merge(['UsuarioInvID' => $this->saveManualUser($request)]);
         }
-        $data = $this->validated($request, $serial, $esImpresora);
+        $data = $this->validated($request, $serial, $esSimple);
 
         unset($data['Hw_Serial']);
         $hardware->update($data);
-        $hardware->dispositivos()->sync($esImpresora ? [] : $request->input('dispositivos', []));
-        $hardware->softwaresNoLicenciados()->sync($esImpresora ? [] : $request->input('software_no_licenciado', []));
-        $hardware->softwaresLicenciados()->sync($esImpresora ? [] : $request->input('software_licenciado', []));
+        $hardware->dispositivos()->sync($esSimple ? [] : $request->input('dispositivos', []));
+        $hardware->softwaresNoLicenciados()->sync($esSimple ? [] : $request->input('software_no_licenciado', []));
+        $hardware->softwaresLicenciados()->sync($esSimple ? [] : $request->input('software_licenciado', []));
 
         $this->handleActaUpload($request, $hardware, 'acta_archivo', 'acta_titulo');
 
@@ -359,11 +409,50 @@ class HardwareController extends Controller
         return back()->with('ok', 'Acta eliminada correctamente.');
     }
 
-    private function esImpresora(Request $request): bool
+    private function tiposPorModulo(string $modulo)
     {
-        $tipo = Tipo::query()->find($request->input('TipoID'));
+        return Tipo::query()->orderBy('Nombre')->get()->filter(function (Tipo $tipo) use ($modulo) {
+            $nombre = Str::ascii(mb_strtolower(trim($tipo->Nombre)));
+            $esImpresora = str_contains($nombre, 'impresor');
+            $esCamara = str_contains($nombre, 'camara') || str_contains($nombre, 'camera');
 
-        return $tipo !== null && strcasecmp(trim((string) $tipo->Nombre), 'Impresora') === 0;
+            return match ($modulo) {
+                'impresoras' => $esImpresora,
+                'camaras' => $esCamara,
+                default => !$esImpresora && !$esCamara,
+            };
+        })->values();
+    }
+
+    private function moduloParaTipo(?int $tipoId): string
+    {
+        if ($this->tipoPerteneceAlModulo($tipoId, 'impresoras')) {
+            return 'impresoras';
+        }
+        if ($this->tipoPerteneceAlModulo($tipoId, 'camaras')) {
+            return 'camaras';
+        }
+
+        return 'computadores';
+    }
+
+    private function tipoPerteneceAlModulo(?int $tipoId, string $modulo): bool
+    {
+        return $tipoId !== null && $this->tiposPorModulo($modulo)
+            ->contains(fn (Tipo $tipo) => (int) $tipo->TipoID === $tipoId);
+    }
+
+    private function esTipoSimple(?int $tipoId): bool
+    {
+        return $this->tipoPerteneceAlModulo($tipoId, 'impresoras')
+            || $this->tipoPerteneceAlModulo($tipoId, 'camaras');
+    }
+
+    private function validarTipoDelModulo(Request $request, string $modulo): void
+    {
+        $request->validate([
+            'TipoID' => ['required', 'integer', Rule::in($this->tiposPorModulo($modulo)->pluck('TipoID')->all())],
+        ]);
     }
 
     private function olvidarDatosNoGenerales(Request $request): void
@@ -392,8 +481,12 @@ class HardwareController extends Controller
         ]));
     }
 
-    private function validated(Request $request, ?string $ignoreSerial = null, bool $esImpresora = false): array
+    private function validated(Request $request, ?string $ignoreSerial = null, bool $esSimple = false, ?string $modulo = null): array
     {
+        if ($modulo !== null) {
+            $this->validarTipoDelModulo($request, $modulo);
+        }
+
         $serialUnique = Rule::unique('Hardware', 'Hw_Serial');
         if ($ignoreSerial !== null) {
             $serialUnique->ignore($ignoreSerial, 'Hw_Serial');
@@ -403,7 +496,7 @@ class HardwareController extends Controller
             'Hw_Serial' => ['required', 'string', 'max:50', $serialUnique],
             'Hw_Serial_Cargador' => ['nullable', 'string', 'max:50'],
             'Hw_Nombre' => ['required', 'string', 'max:50'],
-            'ProcesadorID' => $esImpresora
+            'ProcesadorID' => $esSimple
                 ? ['nullable', 'integer', 'exists:Procesador,ProcesadorID']
                 : ['required', 'integer', 'exists:Procesador,ProcesadorID'],
             'Hw_Ram' => ['nullable', 'string', 'max:50'],
@@ -414,7 +507,7 @@ class HardwareController extends Controller
             'TipoID' => ['required', 'integer', 'exists:Tipo,TipoID'],
             'ModeloID' => ['required', 'integer', 'exists:Modelo,ModeloID'],
             'MonitorID' => ['nullable', 'string', 'exists:Monitor,MonitorID'],
-            'UsuarioInvID' => $esImpresora
+            'UsuarioInvID' => $esSimple
                 ? ['nullable', 'string', 'exists:UsuarioInv,UsuarioInvID']
                 : ['required', 'string', 'exists:UsuarioInv,UsuarioInvID'],
             'PropietarioID' => ['nullable', 'integer', 'exists:Propietario,PropietarioID'],
@@ -437,7 +530,7 @@ class HardwareController extends Controller
         $data['Hw_FechaCompra'] ??= now()->toDateString();
         $data['Hw_ValorCompra'] ??= 0;
         $data['Hw_FechaGarantiaFin'] ??= now()->addYear()->toDateString();
-        if ($esImpresora) {
+        if ($esSimple) {
             $data['ProcesadorID'] = null;
             $data['UsuarioInvID'] = null;
             $data['MonitorID'] = null;

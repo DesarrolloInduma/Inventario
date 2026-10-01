@@ -35,6 +35,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/hardware', [HardwareController::class, 'index'])->name('hardware.index');
     Route::get('/hardware/crear', [HardwareController::class, 'create'])->name('hardware.create');
     Route::post('/hardware', [HardwareController::class, 'store'])->name('hardware.store');
+    Route::get('/impresoras', [HardwareController::class, 'impresoras'])->name('impresoras.index');
+    Route::get('/impresoras/crear', [HardwareController::class, 'createImpresora'])->name('impresoras.create');
+    Route::post('/impresoras', [HardwareController::class, 'storeImpresora'])->name('impresoras.store');
+    Route::get('/camaras', [HardwareController::class, 'camaras'])->name('camaras.index');
+    Route::get('/camaras/crear', [HardwareController::class, 'createCamara'])->name('camaras.create');
+    Route::post('/camaras', [HardwareController::class, 'storeCamara'])->name('camaras.store');
     Route::get('/hardware/{serial}', [HardwareController::class, 'show'])->name('hardware.show');
     Route::get('/hardware/{serial}/acta-entrega', [HardwareController::class, 'deliveryAct'])->name('hardware.delivery-act');
     Route::get('/hardware/{serial}/editar', [HardwareController::class, 'edit'])->name('hardware.edit');

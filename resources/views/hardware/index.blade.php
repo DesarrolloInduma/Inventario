@@ -1,16 +1,21 @@
 @extends('layouts.app')
 
-@section('title', 'Hardware')
+@php($titulosModulo = ['computadores' => 'Computadores', 'impresoras' => 'Impresoras', 'camaras' => 'Cámaras'])
+@php($rutasCrear = ['computadores' => 'hardware.create', 'impresoras' => 'impresoras.create', 'camaras' => 'camaras.create'])
+@php($iconosModulo = ['computadores' => 'bi-pc-display', 'impresoras' => 'bi-printer', 'camaras' => 'bi-camera-video'])
+@php($tituloModulo = $titulosModulo[$modulo])
 
-@section('page_title', 'Hardware')
+@section('title', $tituloModulo)
+
+@section('page_title', $tituloModulo)
 
 @section('content')
 <div x-data="{ q: '' }" x-effect="$refs.rows && $refs.rows.querySelectorAll('tr[data-row]').forEach(row => row.hidden = !!q && !row.textContent.toLowerCase().includes(q.toLowerCase()))">
     <div class="mb-5 flex flex-wrap items-end justify-between gap-4">
         <div>
-            <div class="flex items-center gap-3"><span class="grid size-11 place-items-center rounded-2xl bg-brand-600 text-white shadow-lg shadow-brand-600/25"><i class="bi bi-pc-display text-xl"></i></span><div><h2 class="text-2xl font-extrabold tracking-tight text-slate-900">Hardware</h2><p class="text-sm text-slate-500">Consulta y administra todos los equipos registrados.</p></div></div>
+            <div class="flex items-center gap-3"><span class="grid size-11 place-items-center rounded-2xl bg-brand-600 text-white shadow-lg shadow-brand-600/25"><i class="bi {{ $iconosModulo[$modulo] }} text-xl"></i></span><div><h2 class="text-2xl font-extrabold tracking-tight text-slate-900">{{ $tituloModulo }}</h2><p class="text-sm text-slate-500">Consulta y administra {{ in_array($modulo, ['computadores'], true) ? 'los ' : 'las ' }}{{ strtolower($tituloModulo) }} registrados.</p></div></div>
         </div>
-        <a href="{{ route('hardware.create') }}" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm shadow-brand-600/25 transition hover:bg-brand-700"><i class="bi bi-plus-lg"></i>Nuevo hardware</a>
+        <a href="{{ route($rutasCrear[$modulo]) }}" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm shadow-brand-600/25 transition hover:bg-brand-700"><i class="bi bi-plus-lg"></i>{{ ['computadores' => 'Nuevo computador', 'impresoras' => 'Nueva impresora', 'camaras' => 'Nueva cámara'][$modulo] }}</a>
     </div>
 
     <div class="mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-card">
@@ -40,7 +45,7 @@
                             <td class="px-4 py-3.5"><x-vencimiento :fecha="$eq->Hw_FechaGarantiaFin" /></td>
                         </tr>
                     @empty
-                        <tr><td colspan="10"><x-empty-state icono="bi-pc-display" texto="{{ $q !== '' ? 'Sin resultados para «' . $q . '».' : 'Aún no hay hardware registrado.' }}" accion="hardware.create" boton="Registrar hardware" /></td></tr>
+                        <tr><td colspan="10"><x-empty-state icono="{{ $iconosModulo[$modulo] }}" texto="{{ $q !== '' ? 'Sin resultados para «' . $q . '».' : 'Aún no hay ' . strtolower($tituloModulo) . ' registrados.' }}" accion="{{ $rutasCrear[$modulo] }}" boton="{{ 'Registrar ' . ($modulo === 'computadores' ? 'computador' : ($modulo === 'impresoras' ? 'impresora' : 'cámara')) }}" /></td></tr>
                     @endforelse
                 </tbody>
             </table>
