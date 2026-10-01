@@ -17,6 +17,7 @@ use App\Models\Seguro;
 use App\Models\Tipo;
 use App\Models\Ubicacion;
 use App\Models\UsuarioInv;
+use App\Support\SqlServer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -308,7 +309,7 @@ class HardwareController extends Controller
 
         $usuarioNombre = trim($data['UsuarioActual']);
         $usuario = UsuarioInv::query()
-            ->whereRaw('LOWER(UsuarioInvNombre) = ?', [mb_strtolower($usuarioNombre)])
+            ->whereRaw(SqlServer::lowerEquals('UsuarioInvNombre'), [$usuarioNombre])
             ->first();
 
         if (!$usuario) {

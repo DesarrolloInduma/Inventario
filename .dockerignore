@@ -1,4 +1,5 @@
 .env
+public/hot
 .git
 .github
 node_modules

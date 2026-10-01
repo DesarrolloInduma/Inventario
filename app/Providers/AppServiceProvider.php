@@ -24,8 +24,7 @@ class AppServiceProvider extends ServiceProvider
             request()->server->get('HTTP_X_FORWARDED_PROTO') === 'https' ||
             request()->isSecure() ||
             str_contains(request()->header('host') ?? '', 'devtunnels.ms') ||
-            str_contains(request()->header('host') ?? '', 'ngrok') ||
-            app()->environment('production')
+            str_contains(request()->header('host') ?? '', 'ngrok')
         ) {
             URL::forceScheme('https');
         }
