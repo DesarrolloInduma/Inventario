@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Hardware;
 use App\Models\Software_Licenciado;
 use App\Models\Tipo_Software;
+use App\Support\SqlServer;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class SoftwareLicenciadoController extends Controller
 {
@@ -16,9 +16,9 @@ class SoftwareLicenciadoController extends Controller
 
         $software = Software_Licenciado::with(['tipoSoftware', 'hardwares'])
             ->when($q !== '', function ($query) use ($q) {
-                $query->where('Software_Nombre', 'like', "%{$q}%")
-                    ->orWhere('Software_Clave', 'like', "%{$q}%")
-                    ->orWhere('Software_Version', 'like', "%{$q}%");
+                $query->whereTextLike('Software_Nombre', "%{$q}%")
+                    ->orWhereTextLike('Software_Clave', "%{$q}%")
+                    ->orWhereTextLike('Software_Version', "%{$q}%");
             })
             ->orderBy('Software_Id')
             ->paginate(15)
@@ -106,8 +106,8 @@ class SoftwareLicenciadoController extends Controller
     {
         return $request->validate([
             'Soft_Tipo_Id' => ['required', 'integer', 'exists:Tipo_Software,Soft_Tipo_Id'],
-            'Software_Nombre' => ['required', 'string', 'max:100', Rule::unique('Software_Licenciado', 'Software_Nombre')->ignore($ignoreId, 'Software_Id')],
-            'Software_Clave' => ['nullable', 'string', 'max:50', Rule::unique('Software_Licenciado', 'Software_Clave')->ignore($ignoreId, 'Software_Id')],
+            'Software_Nombre' => ['required', 'string', 'max:100', SqlServer::uniqueRule('Software_Licenciado', 'Software_Nombre', $ignoreId, 'Software_Id')],
+            'Software_Clave' => ['nullable', 'string', 'max:50', SqlServer::uniqueRule('Software_Licenciado', 'Software_Clave', $ignoreId, 'Software_Id')],
             'Software_Cantidad' => ['nullable', 'integer', 'min:0'],
             'Software_Version' => ['nullable', 'string', 'max:50'],
             'Software_Tip_Licenciamiento' => ['nullable', 'string', 'max:50'],

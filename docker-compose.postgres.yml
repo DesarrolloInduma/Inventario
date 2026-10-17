@@ -1,0 +1,27 @@
+name: inventario-postgres
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: inventario-postgres
+    restart: unless-stopped
+    env_file:
+      - /root/backups/inventario-recuperacion/pg-prod/.env
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - inventario
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inventario -d inventario"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+networks:
+  inventario:
+    external: true
+    name: inventario_default
+
+volumes:
+  postgres-data:
+    name: inventario_postgres_data

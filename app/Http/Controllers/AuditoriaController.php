@@ -15,10 +15,10 @@ class AuditoriaController extends Controller
         $auditorias = Auditoria::query()
             ->when($q !== '', function ($query) use ($q) {
                 $query->where(function ($sub) use ($q) {
-                    $sub->where('Hw_Serial', 'like', "%{$q}%")
-                        ->orWhere('Hw_Nombre', 'like', "%{$q}%")
-                        ->orWhere('UsuarioInvNombre', 'like', "%{$q}%")
-                        ->orWhere('Observaciones', 'like', "%{$q}%");
+                    $sub->whereTextLike('Hw_Serial', "%{$q}%")
+                        ->orWhereTextLike('Hw_Nombre', "%{$q}%")
+                        ->orWhereTextLike('UsuarioInvNombre', "%{$q}%")
+                        ->orWhereTextLike('Observaciones', "%{$q}%");
                 });
             })
             ->orderByDesc('FechaAuditoria')

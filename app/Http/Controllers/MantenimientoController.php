@@ -24,9 +24,9 @@ class MantenimientoController extends Controller
 
         $mantenimientos = Mantenimineto::with('hardware')
             ->when($q !== '', function ($query) use ($q) {
-                $query->where('Hw_Serial', 'like', "%{$q}%")
-                    ->orWhere('mantenimiento_Recibe', 'like', "%{$q}%")
-                    ->orWhere('mantenimiento_Realiza', 'like', "%{$q}%");
+                $query->whereTextLike('Hw_Serial', "%{$q}%")
+                    ->orWhereTextLike('mantenimiento_Recibe', "%{$q}%")
+                    ->orWhereTextLike('mantenimiento_Realiza', "%{$q}%");
             })
             ->orderByDesc('mantenimiento_Id')
             ->paginate(15)

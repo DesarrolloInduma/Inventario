@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: mi-api
+    image: inventario-candidate:local
     container_name: inventario-app
     restart: unless-stopped
     env_file:
@@ -12,8 +12,7 @@ services:
       - "8093:80"
     volumes:
       - storage-data:/var/www/html/storage
-    command: >
-      sh -c "php artisan migrate --force || echo 'Migraciones omitidas: revisar DB_PASSWORD' && exec apache2-foreground"
+    command: ["apache2-foreground"]
 
 volumes:
   storage-data:

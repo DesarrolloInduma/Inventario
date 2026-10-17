@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Hardware;
 use App\Models\Software_NoLicenciado;
 use App\Models\Tipo_Software;
+use App\Support\SqlServer;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class SoftwareNoLicenciadoController extends Controller
 {
@@ -16,8 +16,8 @@ class SoftwareNoLicenciadoController extends Controller
 
         $software = Software_NoLicenciado::with(['tipoSoftware', 'hardwares'])
             ->when($q !== '', function ($query) use ($q) {
-                $query->where('Softwarenl_Nombre', 'like', "%{$q}%")
-                    ->orWhere('Softwarenl_Version', 'like', "%{$q}%");
+                $query->whereTextLike('Softwarenl_Nombre', "%{$q}%")
+                    ->orWhereTextLike('Softwarenl_Version', "%{$q}%");
             })
             ->orderBy('Softwarenl_Nombre')
             ->paginate(15)
@@ -97,7 +97,7 @@ class SoftwareNoLicenciadoController extends Controller
     private function validated(Request $request, ?string $ignoreId = null): array
     {
         return $request->validate([
-            'Softwarenl_Nombre' => ['required', 'string', 'max:50', Rule::unique('Software_NoLicenciado', 'Softwarenl_Nombre')->where(fn ($query) => $query->where('Softwarenl_Version', $request->input('Softwarenl_Version')))->ignore($ignoreId, 'Softwarenl_Id')],
+            'Softwarenl_Nombre' => ['required', 'string', 'max:50', SqlServer::uniqueRule('Software_NoLicenciado', 'Softwarenl_Nombre', $ignoreId, 'Softwarenl_Id', ['Softwarenl_Version' => $request->input('Softwarenl_Version')])],
             'Softwarenl_Version' => ['nullable', 'string', 'max:50'],
             'Soft_Tipo_Id' => ['nullable', 'integer', 'exists:Tipo_Software,Soft_Tipo_Id'],
         ]);

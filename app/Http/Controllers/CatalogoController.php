@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\SqlServer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class CatalogoController extends Controller
 {
@@ -192,20 +192,17 @@ class CatalogoController extends Controller
             $rules[$c['col']] = $rule;
 
             if ($c['unique'] ?? false) {
-                $unique = Rule::unique($cfg['model'], $c['col']);
-                if ($ignoreId !== null) {
-                    $unique->ignore($ignoreId, $cfg['pk']);
-                }
-                $rules[$c['col']][] = $unique;
+                $rules[$c['col']][] = SqlServer::uniqueRule($cfg['model'], $c['col'], $ignoreId, $cfg['pk']);
             }
 
             if (isset($c['unique_with'])) {
-                $unique = Rule::unique($cfg['model'], $c['col'])
-                    ->where(fn ($query) => $query->where($c['unique_with'], $request->input($c['unique_with'])));
-                if ($ignoreId !== null) {
-                    $unique->ignore($ignoreId, $cfg['pk']);
-                }
-                $rules[$c['col']][] = $unique;
+                $rules[$c['col']][] = SqlServer::uniqueRule(
+                    $cfg['model'],
+                    $c['col'],
+                    $ignoreId,
+                    $cfg['pk'],
+                    [$c['unique_with'] => $request->input($c['unique_with'])]
+                );
             }
         }
 
@@ -213,11 +210,7 @@ class CatalogoController extends Controller
             $pkRule = isset($rules[$cfg['pk']])
                 ? array_merge([$rules[$cfg['pk']][0]], array_slice($rules[$cfg['pk']], 1))
                 : ['required', 'string'];
-            $unique = Rule::unique($cfg['model'], $cfg['pk']);
-            if ($ignoreId !== null) {
-                $unique->ignore($ignoreId, $cfg['pk']);
-            }
-            $rules[$cfg['pk']] = array_merge($pkRule, [$unique]);
+            $rules[$cfg['pk']] = array_merge($pkRule, [SqlServer::uniqueRule($cfg['model'], $cfg['pk'], $ignoreId, $cfg['pk'])]);
         }
 
         return $request->validate($rules);

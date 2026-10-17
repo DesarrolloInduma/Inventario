@@ -19,7 +19,7 @@ class ReporteController extends Controller
     {
         $q = trim((string) $request->query('q'));
         $hardware = Hardware::with(['tipo', 'modelo.marca', 'usuarioInv', 'ubicacion'])
-            ->when($q !== '', fn ($query) => $query->where('Hw_Serial', 'like', "%{$q}%"))
+            ->when($q !== '', fn ($query) => $query->whereTextLike('Hw_Serial', "%{$q}%"))
             ->orderBy('Hw_Serial')->get();
 
         return view('reportes.hardware', compact('hardware', 'q'));
@@ -36,7 +36,7 @@ class ReporteController extends Controller
     {
         $q = trim((string) $request->query('q'));
         $auditorias = Auditoria::query()
-            ->when($q !== '', fn ($query) => $query->where('Hw_Serial', 'like', "%{$q}%"))
+            ->when($q !== '', fn ($query) => $query->whereTextLike('Hw_Serial', "%{$q}%"))
             ->orderByDesc('FechaAuditoria')->get();
 
         return view('reportes.auditoria', compact('auditorias', 'q'));
@@ -46,7 +46,7 @@ class ReporteController extends Controller
     {
         $q = trim((string) $request->query('q'));
         $hardware = Hardware::with(['tipo', 'modelo.marca', 'usuarioInv'])
-            ->when($q !== '', fn ($query) => $query->where('Hw_Serial', 'like', "%{$q}%"))
+            ->when($q !== '', fn ($query) => $query->whereTextLike('Hw_Serial', "%{$q}%"))
             ->orderBy('Hw_Serial')->get();
 
         return response()->streamDownload(function () use ($hardware) {

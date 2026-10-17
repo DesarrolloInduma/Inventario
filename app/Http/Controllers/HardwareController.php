@@ -48,13 +48,13 @@ class HardwareController extends Controller
             ->whereIn('TipoID', $this->tiposPorModulo($modulo)->pluck('TipoID'))
             ->when($q !== '', function ($query) use ($q) {
                 $query->where(function ($sub) use ($q) {
-                    $sub->where('Hw_Serial', 'like', "%{$q}%")
-                        ->orWhere('Hw_Nombre', 'like', "%{$q}%")
+                    $sub->whereTextLike('Hw_Serial', "%{$q}%")
+                        ->orWhereTextLike('Hw_Nombre', "%{$q}%")
                         ->orWhereHas('usuarioInv', function ($user) use ($q) {
-                            $user->where('UsuarioInvNombre', 'like', "%{$q}%")
-                                ->orWhere('UsuarioInvArea', 'like', "%{$q}%")
-                                ->orWhere('UsuarioInvCargo', 'like', "%{$q}%")
-                                ->orWhere('UsuarioInvCorreo', 'like', "%{$q}%");
+                            $user->whereTextLike('UsuarioInvNombre', "%{$q}%")
+                                ->orWhereTextLike('UsuarioInvArea', "%{$q}%")
+                                ->orWhereTextLike('UsuarioInvCargo', "%{$q}%")
+                                ->orWhereTextLike('UsuarioInvCorreo', "%{$q}%");
                         });
                 });
             })
@@ -488,10 +488,7 @@ class HardwareController extends Controller
             $this->validarTipoDelModulo($request, $modulo);
         }
 
-        $serialUnique = Rule::unique('Hardware', 'Hw_Serial');
-        if ($ignoreSerial !== null) {
-            $serialUnique->ignore($ignoreSerial, 'Hw_Serial');
-        }
+        $serialUnique = SqlServer::uniqueRule('Hardware', 'Hw_Serial', $ignoreSerial, 'Hw_Serial');
 
         $data = $request->validate([
             'Hw_Serial' => ['required', 'string', 'max:50', $serialUnique],
@@ -520,8 +517,8 @@ class HardwareController extends Controller
             'Activo' => ['nullable', 'boolean'],
             'Hw_FehaRenovacion' => ['nullable', 'date'],
             'Hw_Estado' => ['nullable', 'string', 'max:50'],
-            'MacEthernet' => ['nullable', 'string', 'max:50', Rule::unique('Hardware', 'MacEthernet')->ignore($ignoreSerial, 'Hw_Serial')],
-            'MacWireless' => ['nullable', 'string', 'max:50', Rule::unique('Hardware', 'MacWireless')->ignore($ignoreSerial, 'Hw_Serial')],
+            'MacEthernet' => ['nullable', 'string', 'max:50', SqlServer::uniqueRule('Hardware', 'MacEthernet', $ignoreSerial, 'Hw_Serial')],
+            'MacWireless' => ['nullable', 'string', 'max:50', SqlServer::uniqueRule('Hardware', 'MacWireless', $ignoreSerial, 'Hw_Serial')],
         ]);
 
         foreach (['Revisado', 'Activo'] as $flag) {
@@ -557,7 +554,7 @@ class HardwareController extends Controller
             'usuario_nombre' => ['required', 'string', 'max:50'],
             'usuario_cargo' => ['nullable', 'string', 'max:50'],
             'usuario_area' => ['required', 'string', 'max:50'],
-            'usuario_correo' => ['required', 'email', 'max:50', Rule::unique('UsuarioInv', 'UsuarioInvCorreo')->ignore($request->input('usuario_id'), 'UsuarioInvID')],
+            'usuario_correo' => ['required', 'email', 'max:50', SqlServer::uniqueRule('UsuarioInv', 'UsuarioInvCorreo', $request->input('usuario_id'), 'UsuarioInvID')],
         ]);
 
         UsuarioInv::updateOrCreate(

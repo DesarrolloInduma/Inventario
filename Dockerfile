@@ -36,6 +36,7 @@ RUN apt-get update \
         libicu-dev \
         libonig-dev \
         libzip-dev \
+        libpq-dev \
         unzip \
     && curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg \
     && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/debian/12/prod bookworm main" > /etc/apt/sources.list.d/mssql-release.list \
@@ -47,6 +48,7 @@ RUN apt-get update \
         bcmath \
         intl \
         mbstring \
+        pdo_pgsql \
         zip \
     && a2enmod rewrite \
     && sed -ri "s!/var/www/html!${APACHE_DOCUMENT_ROOT}!g" /etc/apache2/sites-available/*.conf \

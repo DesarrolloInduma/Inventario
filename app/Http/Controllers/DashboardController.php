@@ -16,18 +16,22 @@ class DashboardController extends Controller
 {
     public function __invoke()
     {
+        $tipoNombre = SqlServer::qi('Tipo.Nombre');
+        $marcaNombre = SqlServer::qi('Marca.Nombre');
+        $marcaExpr = "COALESCE({$marcaNombre}, 'Sin marca')";
+
         $equiposPorTipo = DB::table('Hardware')
             ->join('Tipo', 'Tipo.TipoID', '=', 'Hardware.TipoID')
-            ->selectRaw('Tipo.Nombre as etiqueta, COUNT(*) as total')
-            ->groupBy('Tipo.Nombre')
+            ->selectRaw("{$tipoNombre} as etiqueta, COUNT(*) as total")
+            ->groupBy(DB::raw($tipoNombre))
             ->orderByDesc('total')
             ->get();
 
         $equiposPorMarca = DB::table('Hardware')
             ->join('Modelo', 'Modelo.ModeloID', '=', 'Hardware.ModeloID')
             ->leftJoin('Marca', 'Marca.MarcaID', '=', 'Modelo.MarcaID')
-            ->selectRaw("COALESCE(Marca.Nombre, 'Sin marca') as etiqueta, COUNT(*) as total")
-            ->groupBy(DB::raw("COALESCE(Marca.Nombre, 'Sin marca')"))
+            ->selectRaw("{$marcaExpr} as etiqueta, COUNT(*) as total")
+            ->groupBy(DB::raw($marcaExpr))
             ->orderByDesc('total')
             ->limit(8)
             ->get();
@@ -55,7 +59,7 @@ class DashboardController extends Controller
         }
 
         $licencias = Software_Licenciado::query()
-            ->selectRaw('COALESCE(SUM(Software_Cantidad), 0) as compradas, COALESCE(SUM(Software_Cantidad), 0) - (SELECT COUNT(*) FROM Hard_Soft) as disponibles')
+            ->selectRaw('COALESCE(SUM('.SqlServer::qi('Software_Cantidad').'), 0) as compradas, COALESCE(SUM('.SqlServer::qi('Software_Cantidad').'), 0) - (SELECT COUNT(*) FROM '.SqlServer::qi('Hard_Soft').') as disponibles')
             ->first();
 
         return view('dashboard', [

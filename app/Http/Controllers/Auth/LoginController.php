@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\SqlServer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class LoginController extends Controller
@@ -22,13 +24,17 @@ class LoginController extends Controller
             'password' => ['required'],
         ]);
 
-        $user = User::where('email', $credentials['email'])->first();
+        $user = SqlServer::pgsql()
+            ? User::whereRaw('unaccent(lower('.SqlServer::qi('email').'::text)) = unaccent(lower(?::text))', [$credentials['email']])->first()
+            : User::where('email', $credentials['email'])->first();
 
-        if (!$user || !$user->activo || !Auth::attempt($credentials, $request->boolean('remember'))) {
+        if (!$user || !$user->activo || !Hash::check($credentials['password'], $user->password)) {
             throw ValidationException::withMessages([
                 'email' => 'Credenciales incorrectas o usuario inactivo.',
             ]);
         }
+
+        Auth::login($user, $request->boolean('remember'));
 
         $request->session()->regenerate();
 
