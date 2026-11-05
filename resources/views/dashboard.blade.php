@@ -38,12 +38,12 @@
 </div>
 
 {{-- Alertas rápidas --}}
-@if($garantiasVencidas > 0 || $equiposInactivos > 0)
+@if($devolucionesVencidas > 0 || $equiposInactivos > 0)
     <div class="mt-4 grid gap-3 sm:grid-cols-2">
-        @if($garantiasVencidas > 0)
+        @if($devolucionesVencidas > 0)
             <a href="{{ route('hardware.index') }}" class="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800 transition hover:border-amber-300 hover:bg-amber-100">
                 <i class="bi bi-shield-exclamation text-lg"></i>
-                <strong>{{ $garantiasVencidas }}</strong> equipo(s) con garantía vencida
+                <strong>{{ $devolucionesVencidas }}</strong> equipo(s) con fecha de devolución vencida
                 <i class="bi bi-chevron-right ml-auto text-xs"></i>
             </a>
         @endif

@@ -15,9 +15,8 @@ return new class extends Migration
             $table->unsignedInteger('ProcesadorID');
             $table->string('Hw_Ram', 50)->nullable();
             $table->string('Hw_Disco_Duro', 50)->nullable();
-            $table->date('Hw_FechaCompra');
-            $table->decimal('Hw_ValorCompra', 18, 0);
-            $table->date('Hw_FechaGarantiaFin');
+            $table->date('Hw_FechaCompra')->nullable();
+            $table->date('Hw_FechaDevolucion')->nullable();
             $table->unsignedInteger('TipoID');
             $table->unsignedInteger('ModeloID');
             $table->string('MonitorID', 50);
@@ -29,7 +28,7 @@ return new class extends Migration
             $table->unsignedInteger('SeguroID')->nullable();
             $table->boolean('Revisado')->nullable();
             $table->boolean('Activo')->nullable();
-            $table->date('Hw_FehaRenovacion')->nullable();
+            $table->date('Hw_FechaRenovacion')->nullable();
             $table->string('Hw_Estado', 50)->nullable();
             $table->string('MacEthernet', 50)->nullable();
             $table->string('MacWireless', 50)->nullable();

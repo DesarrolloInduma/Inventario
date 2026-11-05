@@ -20,9 +20,8 @@ class Hardware extends Model
 
     protected $casts = [
         'Hw_FechaCompra' => 'date',
-        'Hw_FechaGarantiaFin' => 'date',
-        'Hw_FehaRenovacion' => 'date',
-        'Hw_ValorCompra' => 'float',
+        'Hw_FechaDevolucion' => 'date',
+        'Hw_FechaRenovacion' => 'date',
         'Revisado' => 'boolean',
         'Activo' => 'boolean',
     ];
@@ -109,7 +108,7 @@ class Hardware extends Model
 
     public function mantenimientos()
     {
-        return $this->hasMany(Mantenimineto::class, 'Hw_Serial', 'Hw_Serial');
+        return $this->hasMany(Mantenimiento::class, 'Hw_Serial', 'Hw_Serial');
     }
 
     public function observaciones()

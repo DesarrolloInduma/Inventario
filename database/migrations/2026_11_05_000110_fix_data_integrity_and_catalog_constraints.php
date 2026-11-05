@@ -13,7 +13,7 @@ return new class extends Migration
         $this->repairHardwareConsistency();
         $this->repairProcesadores();
         $this->repairModelosSinMarca();
-        $this->makePurchaseFieldsNullable();
+        $this->makeOptionalDateFieldsNullable();
         $this->addProcesadorUniqueIndex();
         $this->addCambioUsuarioForeignKey();
     }
@@ -29,12 +29,15 @@ return new class extends Migration
         Schema::table('Procesador', function (Blueprint $table) {
             $table->dropUnique('procesador_nombre_velocidad_unique');
         });
+    }
 
-        Schema::table('Hardware', function (Blueprint $table) {
-            $table->date('Hw_FechaCompra')->nullable(false)->change();
-            $table->decimal('Hw_ValorCompra', 18, 0)->nullable(false)->change();
-            $table->date('Hw_FechaGarantiaFin')->nullable(false)->change();
-        });
+    private function fechaDevolucionColumn(): string
+    {
+        if (Schema::hasColumn('Hardware', 'Hw_FechaDevolucion')) {
+            return 'Hw_FechaDevolucion';
+        }
+
+        return 'Hw_FechaGarantiaFin';
     }
 
     private function repairMonitorProveedor(): void
@@ -81,12 +84,14 @@ return new class extends Migration
             ->whereRaw('LOWER(Hw_Estado) = ?', ['inactivo'])
             ->update(['Hw_Estado' => 'Bueno']);
 
+        $fechaDevolucion = $this->fechaDevolucionColumn();
+
         $equipos = DB::table('Hardware as h')
             ->leftJoin('Leasing as l', 'h.LeasingID', '=', 'l.LeasingID')
             ->select(
                 'h.Hw_Serial',
                 'h.Hw_FechaCompra',
-                'h.Hw_FechaGarantiaFin',
+                "h.{$fechaDevolucion} as fecha_devolucion",
                 'l.FechaInicio',
                 'l.FechaVencimiento'
             )
@@ -99,8 +104,8 @@ return new class extends Migration
                 $updates['Hw_FechaCompra'] = $eq->FechaInicio;
             }
 
-            if ($eq->FechaVencimiento && $eq->Hw_FechaGarantiaFin && $eq->Hw_FechaGarantiaFin > $eq->FechaVencimiento) {
-                $updates['Hw_FechaGarantiaFin'] = $eq->FechaVencimiento;
+            if ($eq->FechaVencimiento && $eq->fecha_devolucion && $eq->fecha_devolucion > $eq->FechaVencimiento) {
+                $updates[$fechaDevolucion] = $eq->FechaVencimiento;
             }
 
             if ($updates !== []) {
@@ -124,7 +129,6 @@ return new class extends Migration
                 'Hw_Ram' => '16 GB',
                 'Hw_Disco_Duro' => 'SSD 512 GB',
                 'Hw_Estado' => 'Bueno',
-                'Hw_ValorCompra' => 4500000,
                 'ProcesadorID' => $procesadorId,
                 'ModeloID' => $modeloId,
                 'Activo' => 1,
@@ -179,6 +183,7 @@ return new class extends Migration
         $acerId = DB::table('Marca')->where('Nombre', 'Acer')->value('MarcaID');
 
         if ($acerId) {
+            // Essential 15 es un modelo (p. ej. Acer), nunca una marca.
             DB::table('Modelo')
                 ->whereNull('MarcaID')
                 ->where('Nombre', 'like', '%Essential 15%')
@@ -193,12 +198,21 @@ return new class extends Migration
             ->delete();
     }
 
-    private function makePurchaseFieldsNullable(): void
+    private function makeOptionalDateFieldsNullable(): void
     {
         Schema::table('Hardware', function (Blueprint $table) {
-            $table->date('Hw_FechaCompra')->nullable()->change();
-            $table->decimal('Hw_ValorCompra', 18, 0)->nullable()->change();
-            $table->date('Hw_FechaGarantiaFin')->nullable()->change();
+            if (Schema::hasColumn('Hardware', 'Hw_FechaCompra')) {
+                $table->date('Hw_FechaCompra')->nullable()->change();
+            }
+            if (Schema::hasColumn('Hardware', 'Hw_FechaDevolucion')) {
+                $table->date('Hw_FechaDevolucion')->nullable()->change();
+            } elseif (Schema::hasColumn('Hardware', 'Hw_FechaGarantiaFin')) {
+                $table->date('Hw_FechaGarantiaFin')->nullable()->change();
+            }
+            // Valor de compra ya no forma parte del inventario; se elimina en 000120.
+            if (Schema::hasColumn('Hardware', 'Hw_ValorCompra')) {
+                $table->decimal('Hw_ValorCompra', 18, 0)->nullable()->change();
+            }
         });
     }
 

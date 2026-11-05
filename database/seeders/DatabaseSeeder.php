@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use App\Models\Dispositivo;
 use App\Models\Hardware;
 use App\Models\Leasing;
-use App\Models\Mantenimineto;
+use App\Models\Mantenimiento;
 use App\Models\Modelo;
 use App\Models\Marca;
 use App\Models\Monitor;
@@ -56,6 +56,7 @@ class DatabaseSeeder extends Seeder
             'HP' => ['ProBook 450 G8', 'EliteDesk 800 G6'],
             'Lenovo' => ['ThinkPad E14', 'IdeaPad 3'],
             'Asus' => ['VivoBook 15', 'ExpertBook B1'],
+            // Essential 15 es modelo Acer (no es marca).
             'Acer' => ['Aspire 5', 'Essential 15'],
             'Apple' => ['MacBook Air M2'],
         ];
@@ -162,8 +163,7 @@ class DatabaseSeeder extends Seeder
                 'Hw_Ram' => '16 GB',
                 'Hw_Disco_Duro' => 'SSD 512 GB',
                 'Hw_FechaCompra' => '2024-01-15',
-                'Hw_ValorCompra' => 4500000,
-                'Hw_FechaGarantiaFin' => '2027-01-15',
+                'Hw_FechaDevolucion' => '2027-01-15',
                 'TipoID' => $tipoPortatil,
                 'ModeloID' => Modelo::where('Nombre', 'Latitude 3420')->value('ModeloID'),
                 'MonitorID' => 'MON-001',
@@ -181,8 +181,7 @@ class DatabaseSeeder extends Seeder
                 'Hw_Ram' => '16 GB',
                 'Hw_Disco_Duro' => 'SSD 1 TB',
                 'Hw_FechaCompra' => '2024-03-01',
-                'Hw_ValorCompra' => 5200000,
-                'Hw_FechaGarantiaFin' => '2027-01-15',
+                'Hw_FechaDevolucion' => '2027-01-15',
                 'TipoID' => $tipoPortatil,
                 'ModeloID' => Modelo::where('Nombre', 'ProBook 450 G8')->value('ModeloID'),
                 'MonitorID' => 'MON-002',
@@ -200,8 +199,7 @@ class DatabaseSeeder extends Seeder
                 'Hw_Ram' => '32 GB',
                 'Hw_Disco_Duro' => 'SSD 512 GB + HDD 1 TB',
                 'Hw_FechaCompra' => '2024-02-10',
-                'Hw_ValorCompra' => 6100000,
-                'Hw_FechaGarantiaFin' => '2027-01-15',
+                'Hw_FechaDevolucion' => '2027-01-15',
                 'TipoID' => $tipoEscritorio,
                 'ModeloID' => Modelo::where('Nombre', 'OptiPlex 3080')->value('ModeloID'),
                 'MonitorID' => 'MON-001',
@@ -234,7 +232,7 @@ class DatabaseSeeder extends Seeder
             $hardware->dispositivos()->sync($sync);
         }
 
-        Mantenimineto::create([
+        Mantenimiento::create([
             'Hw_Serial' => 'DL3420-IND-001',
             'mantenimiento_RFE_C' => true,
             'mantenimiento_ST_C' => true,

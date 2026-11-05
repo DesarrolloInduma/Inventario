@@ -11,6 +11,7 @@ use App\Models\Proveedor;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class DataIntegrityFixesTest extends TestCase
@@ -32,13 +33,14 @@ class DataIntegrityFixesTest extends TestCase
         $this->assertSame('16 GB', $hardware->Hw_Ram);
         $this->assertSame('Bueno', $hardware->Hw_Estado);
         $this->assertSame('2024-01-15', $hardware->Hw_FechaCompra->toDateString());
-        $this->assertSame('2027-01-15', $hardware->Hw_FechaGarantiaFin->toDateString());
-        $this->assertEquals(4500000, $hardware->Hw_ValorCompra);
+        $this->assertSame('2027-01-15', $hardware->Hw_FechaDevolucion->toDateString());
+        $this->assertFalse(Schema::hasColumn('Hardware', 'Hw_ValorCompra'));
 
         $this->assertDatabaseHas('Modelo', [
             'Nombre' => 'Essential 15',
             'MarcaID' => Marca::where('Nombre', 'Acer')->value('MarcaID'),
         ]);
+        $this->assertDatabaseMissing('Marca', ['Nombre' => 'Essential 15']);
 
         $this->assertTrue(
             DB::table('hardware_dispositivos')
@@ -47,7 +49,7 @@ class DataIntegrityFixesTest extends TestCase
                 ->exists()
         );
 
-        $this->assertDatabaseHas('Mantenimineto', [
+        $this->assertDatabaseHas('Mantenimiento', [
             'Hw_Serial' => 'DL3420-IND-001',
             'mantenimiento_Realiza' => 'Jerónimo',
         ]);
@@ -118,7 +120,9 @@ class DataIntegrityFixesTest extends TestCase
             ->assertSee('Fecha de devolución')
             ->assertSee('16 GB')
             ->assertSee('Intel Core i5-10300H')
-            ->assertSee('Validado');
+            ->assertSee('Validado')
+            ->assertDontSee('COP')
+            ->assertDontSee('ValorCompra');
     }
 
     public function test_migration_repairs_orphan_monitor_and_inactive_state_conflict(): void
@@ -168,8 +172,7 @@ class DataIntegrityFixesTest extends TestCase
             'ProveedorID' => 'PROV001',
             'LeasingID' => 1,
             'Hw_FechaCompra' => '2024-01-15',
-            'Hw_ValorCompra' => 4500000,
-            'Hw_FechaGarantiaFin' => '2027-01-15',
+            'Hw_FechaDevolucion' => '2027-01-15',
             'Hw_Estado' => 'Bueno',
             'Activo' => true,
             'Hw_Ram' => '16 GB',

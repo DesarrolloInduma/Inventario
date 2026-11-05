@@ -330,7 +330,7 @@ class HardwareController extends Controller
                 'UsuarioInvID' => $usuarioId,
                 'UsuarioInvNombre' => $usuarioNombre,
                 'UsuarioInvArea' => 'Sin asignar',
-                'UsuarioInvCorreo' => $usuarioId . '@induma.local',
+                'UsuarioInvCorreo' => $usuarioId . '@induma.com',
             ]);
         }
 
@@ -512,8 +512,7 @@ class HardwareController extends Controller
             'Hw_Ram' => ['nullable', 'string', 'max:50'],
             'Hw_Disco_Duro' => ['nullable', 'string', 'max:50'],
             'Hw_FechaCompra' => ['nullable', 'date'],
-            'Hw_ValorCompra' => ['nullable', 'numeric', 'min:0'],
-            'Hw_FechaGarantiaFin' => ['nullable', 'date'],
+            'Hw_FechaDevolucion' => ['nullable', 'date'],
             'TipoID' => ['required', 'integer', 'exists:Tipo,TipoID'],
             'ModeloID' => ['required', 'integer', 'exists:Modelo,ModeloID'],
             'MonitorID' => ['nullable', 'string', 'exists:Monitor,MonitorID'],
@@ -527,7 +526,7 @@ class HardwareController extends Controller
             'SeguroID' => ['nullable', 'integer', 'exists:Seguro,SeguroID'],
             'Revisado' => ['nullable', 'boolean'],
             'Activo' => ['nullable', 'boolean'],
-            'Hw_FehaRenovacion' => ['nullable', 'date'],
+            'Hw_FechaRenovacion' => ['nullable', 'date'],
             'Hw_Estado' => ['nullable', 'string', 'max:50'],
             'MacEthernet' => ['nullable', 'string', 'max:50', SqlServer::uniqueRule('Hardware', 'MacEthernet', $ignoreSerial, 'Hw_Serial')],
             'MacWireless' => ['nullable', 'string', 'max:50', SqlServer::uniqueRule('Hardware', 'MacWireless', $ignoreSerial, 'Hw_Serial')],
@@ -537,7 +536,6 @@ class HardwareController extends Controller
             $data[$flag] = $request->boolean($flag);
         }
 
-        // Compra / valor / devolución son opcionales: no rellenar con hoy/0.
         if ($esSimple) {
             $data['ProcesadorID'] = null;
             $data['UsuarioInvID'] = null;

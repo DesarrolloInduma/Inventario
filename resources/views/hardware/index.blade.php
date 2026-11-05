@@ -42,7 +42,7 @@
                             <td class="px-4 py-3.5 text-slate-600">{{ $eq->usuarioInv->UsuarioInvArea ?? '—' }}</td>
                             <td class="px-4 py-3.5 text-slate-600">{{ $eq->usuarioInv->UsuarioInvCorreo ?? '—' }}</td>
                             <td class="px-4 py-3.5 text-slate-600">{{ $eq->ubicacion->UbicacionNombre ?? '—' }}</td>
-                            <td class="px-4 py-3.5"><x-vencimiento :fecha="$eq->Hw_FechaGarantiaFin" /></td>
+                            <td class="px-4 py-3.5"><x-vencimiento :fecha="$eq->Hw_FechaDevolucion" /></td>
                         </tr>
                     @empty
                         <tr><td colspan="10"><x-empty-state icono="{{ $iconosModulo[$modulo] }}" texto="{{ $q !== '' ? 'Sin resultados para «' . $q . '».' : 'Aún no hay ' . strtolower($tituloModulo) . ' registrados.' }}" accion="{{ $rutasCrear[$modulo] }}" boton="{{ 'Registrar ' . ($modulo === 'computadores' ? 'computador' : ($modulo === 'impresoras' ? 'impresora' : 'cámara')) }}" /></td></tr>

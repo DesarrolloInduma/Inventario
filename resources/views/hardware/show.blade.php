@@ -83,26 +83,12 @@
 
     <div class="rounded-3xl border border-slate-200 bg-white shadow-card">
         <header class="flex items-center gap-2 border-b border-slate-100 px-6 py-4">
-            <i class="bi bi-cash-coin text-emerald-500"></i><h3 class="text-sm font-bold text-slate-700">Financiero y asignación</h3>
+            <i class="bi bi-person-badge text-emerald-500"></i><h3 class="text-sm font-bold text-slate-700">Asignación y contratos</h3>
         </header>
         <dl class="divide-y divide-slate-50 px-6">
-            @php
-                $compraLabel = null;
-                if ($hardware->Hw_FechaCompra || ($hardware->Hw_ValorCompra !== null && (float) $hardware->Hw_ValorCompra > 0)) {
-                    $compraPartes = [];
-                    if ($hardware->Hw_FechaCompra) {
-                        $compraPartes[] = $hardware->Hw_FechaCompra->format('d/m/Y');
-                    }
-                    if ($hardware->Hw_ValorCompra !== null && (float) $hardware->Hw_ValorCompra > 0) {
-                        $compraPartes[] = '$' . number_format($hardware->Hw_ValorCompra) . ' COP';
-                    }
-                    $compraLabel = implode(' · ', $compraPartes);
-                }
-            @endphp
             @foreach([
                 ['Usuario asignado', trim(($hardware->usuarioInv?->UsuarioInvNombre ?? '') . (($hardware->usuarioInv?->UsuarioInvArea ?? null) ? ' · ' . $hardware->usuarioInv->UsuarioInvArea : '')) ?: null, 'bi-person-check'],
                 ['Monitor', trim(($hardware->monitor?->MonitorID ?? '') . ' ' . ($hardware->monitor?->Monitor_Modelo ?? '')) ?: null, 'bi-display'],
-                ['Compra', $compraLabel, 'bi-cart-check'],
                 ['Fecha de devolución', 'vencimiento', 'bi-shield-check'],
                 ['Propietario', $hardware->propietario->Nombre ?? null, 'bi-building'],
                 ['Proveedor', $hardware->proveedor->Nombre ?? null, 'bi-truck'],
@@ -114,7 +100,7 @@
                     <dt class="flex items-center gap-2 text-sm text-slate-400"><i class="bi {{ $icono }} text-xs"></i>{{ $label }}</dt>
                     <dd class="text-right text-sm font-semibold text-slate-700">
                         @if($valor === 'vencimiento')
-                            <x-vencimiento :fecha="$hardware->Hw_FechaGarantiaFin" dias />
+                            <x-vencimiento :fecha="$hardware->Hw_FechaDevolucion" dias />
                         @else
                             {{ $valor ?: '—' }}
                         @endif

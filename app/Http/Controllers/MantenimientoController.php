@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Hardware;
-use App\Models\Mantenimineto;
+use App\Models\Mantenimiento;
 use Illuminate\Http\Request;
 
 class MantenimientoController extends Controller
@@ -22,7 +22,7 @@ class MantenimientoController extends Controller
     {
         $q = trim((string) $request->query('q'));
 
-        $mantenimientos = Mantenimineto::with('hardware')
+        $mantenimientos = Mantenimiento::with('hardware')
             ->when($q !== '', function ($query) use ($q) {
                 $query->whereTextLike('Hw_Serial', "%{$q}%")
                     ->orWhereTextLike('mantenimiento_Recibe', "%{$q}%")
@@ -58,7 +58,7 @@ class MantenimientoController extends Controller
             $data["mantenimiento_{$k}_C"] = $request->boolean("mantenimiento_{$k}_C");
         }
 
-        Mantenimineto::create($data);
+        Mantenimiento::create($data);
 
         return redirect()
             ->route('hardware.show', $serial)
@@ -68,14 +68,14 @@ class MantenimientoController extends Controller
     public function show(string $id)
     {
         return view('mantenimiento.show', [
-            'mantenimiento' => Mantenimineto::with('hardware')->findOrFail($id),
+            'mantenimiento' => Mantenimiento::with('hardware')->findOrFail($id),
             'checks' => self::CHECKS,
         ]);
     }
 
     public function destroy(string $id)
     {
-        $mant = Mantenimineto::findOrFail($id);
+        $mant = Mantenimiento::findOrFail($id);
         $serial = $mant->Hw_Serial;
         $mant->delete();
 
