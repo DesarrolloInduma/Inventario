@@ -185,11 +185,6 @@
                     <input type="text" name="q" placeholder="Buscar equipo... ⏎"
                            class="h-10 w-56 rounded-xl border-0 bg-slate-100 pl-10 pr-4 text-sm text-slate-700 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-brand-500/40 xl:w-72">
                 </form>
-                @php($rutaNuevo = request()->routeIs('impresoras.*') ? 'impresoras.create' : (request()->routeIs('camaras.*') ? 'camaras.create' : 'hardware.create'))
-                @php($nombreNuevo = request()->routeIs('impresoras.*') ? 'Nueva impresora' : (request()->routeIs('camaras.*') ? 'Nueva cámara' : 'Nuevo computador'))
-                <a href="{{ route($rutaNuevo) }}" class="hidden items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-brand-600/30 transition hover:bg-brand-700 active:scale-[.98] sm:inline-flex">
-                    <i class="bi bi-plus-lg"></i> {{ $nombreNuevo }}
-                </a>
             </div>
         </header>
 
