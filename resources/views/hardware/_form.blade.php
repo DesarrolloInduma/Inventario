@@ -57,7 +57,7 @@
             <select name="ModeloID" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm">
                 <option value="">Seleccione...</option>
                 @foreach($modelos as $m)
-                    <option value="{{ $m->ModeloID }}" @selected(old('ModeloID',$hardware->ModeloID ?? '') == $m->ModeloID)>{{ $m->Nombre }}</option>
+                    <option value="{{ $m->ModeloID }}" @selected(old('ModeloID',$hardware->ModeloID ?? '') == $m->ModeloID)>{{ trim(($m->marca->Nombre ?? '') . ' ' . $m->Nombre) }}</option>
                 @endforeach
             </select>
         </label>
@@ -71,7 +71,7 @@
         <div class="grid gap-4 p-6 sm:grid-cols-2 lg:grid-cols-3">
             <label class="text-sm font-semibold text-slate-600">Nombre del procesador *<input name="procesador_nombre" :required="!esSimple" maxlength="50" value="{{ old('procesador_nombre',$hardware->procesador?->Nombre ?? '') }}" placeholder="Ej: Intel Core i5-12400" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm"></label>
             <label class="text-sm font-semibold text-slate-600">Velocidad<input name="procesador_velocidad" maxlength="10" value="{{ old('procesador_velocidad',$hardware->procesador?->Velocidad ?? '') }}" placeholder="Ej: 2.50 GHz" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm"></label>
-            @foreach([['Hw_Ram','RAM','Ej: 16 GB'],['Hw_Disco_Duro','Disco duro','Ej: SSD 512 GB'],['Hw_Estado','Estado','Ej: Bueno'],['MacEthernet','MAC Ethernet',''],['MacWireless','MAC Wireless','']] as [$name,$label,$placeholder])
+            @foreach([['Hw_Ram','RAM','Ej: 16 GB'],['Hw_Disco_Duro','Disco duro','Ej: SSD 512 GB'],['Hw_Estado','Estado físico','Ej: Bueno'],['MacEthernet','MAC Ethernet',''],['MacWireless','MAC Wireless','']] as [$name,$label,$placeholder])
                 <label class="text-sm font-semibold text-slate-600">{{ $label }}<input name="{{ $name }}" value="{{ old($name,$hardware->$name ?? '') }}" maxlength="50" placeholder="{{ $placeholder }}" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 font-mono text-sm"></label>
             @endforeach
         </div>

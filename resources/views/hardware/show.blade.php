@@ -67,7 +67,7 @@
                 ['RAM', $hardware->Hw_Ram, 'bi-memory'],
                 ['Disco duro', $hardware->Hw_Disco_Duro, 'bi-device-hdd'],
                 ['Placa', $hardware->Hw_Placa, 'bi-upc'],
-                ['Estado', $hardware->Hw_Estado, 'bi-activity'],
+                ['Estado físico', $hardware->Hw_Estado, 'bi-activity'],
             ] as [$label, $valor, $icono])
                 <div class="flex items-center justify-between gap-4 py-3">
                     <dt class="flex items-center gap-2 text-sm text-slate-400"><i class="bi {{ $icono }} text-xs"></i>{{ $label }}</dt>
@@ -86,11 +86,24 @@
             <i class="bi bi-cash-coin text-emerald-500"></i><h3 class="text-sm font-bold text-slate-700">Financiero y asignación</h3>
         </header>
         <dl class="divide-y divide-slate-50 px-6">
+            @php
+                $compraLabel = null;
+                if ($hardware->Hw_FechaCompra || ($hardware->Hw_ValorCompra !== null && (float) $hardware->Hw_ValorCompra > 0)) {
+                    $compraPartes = [];
+                    if ($hardware->Hw_FechaCompra) {
+                        $compraPartes[] = $hardware->Hw_FechaCompra->format('d/m/Y');
+                    }
+                    if ($hardware->Hw_ValorCompra !== null && (float) $hardware->Hw_ValorCompra > 0) {
+                        $compraPartes[] = '$' . number_format($hardware->Hw_ValorCompra) . ' COP';
+                    }
+                    $compraLabel = implode(' · ', $compraPartes);
+                }
+            @endphp
             @foreach([
                 ['Usuario asignado', trim(($hardware->usuarioInv?->UsuarioInvNombre ?? '') . (($hardware->usuarioInv?->UsuarioInvArea ?? null) ? ' · ' . $hardware->usuarioInv->UsuarioInvArea : '')) ?: null, 'bi-person-check'],
                 ['Monitor', trim(($hardware->monitor?->MonitorID ?? '') . ' ' . ($hardware->monitor?->Monitor_Modelo ?? '')) ?: null, 'bi-display'],
-                ['Compra', optional($hardware->Hw_FechaCompra)->format('d/m/Y') ? optional($hardware->Hw_FechaCompra)->format('d/m/Y') . ' · $' . number_format($hardware->Hw_ValorCompra) : null, 'bi-cart-check'],
-                ['Garantía hasta', 'vencimiento', 'bi-shield-check'],
+                ['Compra', $compraLabel, 'bi-cart-check'],
+                ['Fecha de devolución', 'vencimiento', 'bi-shield-check'],
                 ['Propietario', $hardware->propietario->Nombre ?? null, 'bi-building'],
                 ['Proveedor', $hardware->proveedor->Nombre ?? null, 'bi-truck'],
                 ['Leasing', ($hardware->leasing->Entidad ?? null) ? ($hardware->leasing->Entidad . ' · ' . $hardware->leasing->Contrato) : null, 'bi-file-earmark-text'],
@@ -154,14 +167,28 @@
 {{-- Dispositivos, observaciones e historial --}}
 <div class="mt-5 grid gap-5 lg:grid-cols-3">
     <div class="rounded-3xl border border-slate-200 bg-white shadow-card">
-        <header class="border-b border-slate-100 px-6 py-4"><h3 class="text-sm font-bold text-slate-700">Dispositivos asociados</h3></header>
+        <header class="border-b border-slate-100 px-6 py-4">
+            <h3 class="text-sm font-bold text-slate-700">Dispositivos asociados</h3>
+            <p class="mt-1 text-xs text-slate-400">Marca “Validado” cuando el periférico fue verificado físicamente.</p>
+        </header>
         <form method="POST" action="{{ route('hardware.devices.sync', $hardware->Hw_Serial) }}" class="space-y-3 px-6 py-4">
             @csrf @method('PUT')
             @foreach($dispositivosDisponibles as $dispositivo)
-                <label class="flex items-center gap-2 text-sm text-slate-600">
-                    <input type="checkbox" name="dispositivos[]" value="{{ $dispositivo->Dispositivo_Codigo }}" @checked($hardware->dispositivos->contains('Dispositivo_Codigo', $dispositivo->Dispositivo_Codigo))>
-                    {{ $dispositivo->Dispositivos_Nombre }}
-                </label>
+                @php($asociado = $hardware->dispositivos->firstWhere('Dispositivo_Codigo', $dispositivo->Dispositivo_Codigo))
+                <div class="rounded-xl border border-slate-200 p-3">
+                    <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
+                        <input type="checkbox" name="dispositivos[]" value="{{ $dispositivo->Dispositivo_Codigo }}" @checked((bool) $asociado)>
+                        {{ $dispositivo->Dispositivos_Nombre }}
+                    </label>
+                    <label class="mt-2 flex items-center gap-2 pl-6 text-xs text-slate-500">
+                        <input type="checkbox" name="validaciones[]" value="{{ $dispositivo->Dispositivo_Codigo }}" @checked((bool) ($asociado?->pivot?->Validacion))>
+                        @if($asociado?->pivot?->Validacion)
+                            <span class="font-semibold text-emerald-600">Validado</span>
+                        @else
+                            <span class="font-semibold text-amber-600">Pendiente</span>
+                        @endif
+                    </label>
+                </div>
             @endforeach
             <button class="rounded-xl bg-brand-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-brand-700">Guardar dispositivos</button>
         </form>

@@ -78,7 +78,8 @@ return new class extends Migration
             $table->char('Monitor_Tamaño', 10)->nullable();
             $table->date('FechaCompra');
             $table->date('VencimientoGarantia');
-            $table->unsignedInteger('ProveedorID');
+            $table->string('ProveedorID', 50);
+            $table->foreign('ProveedorID')->references('ProveedorID')->on('Proveedor');
         });
 
         Schema::create('UsuarioInv', function (Blueprint $table) {

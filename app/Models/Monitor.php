@@ -13,5 +13,10 @@ class Monitor extends Model
     public $timestamps = false;
 
     protected $guarded = [];
+
+    public function proveedor()
+    {
+        return $this->belongsTo(Proveedor::class, 'ProveedorID', 'ProveedorID');
+    }
 }
 

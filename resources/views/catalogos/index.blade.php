@@ -1,7 +1,12 @@
 @extends('layouts.app')
 
-@php($editando = request()->query('edit') !== null && auth()->user()->esAdmin() ? $registros->firstWhere($cfg['pk'], request()->query('edit')) : null)
-@php($pkManual = $cfg['pk_manual'] ?? false)
+@php
+    $editando = null;
+    if (request()->query('edit') !== null && auth()->user()->esAdmin()) {
+        $editando = $registros->firstWhere($cfg['pk'], request()->query('edit'));
+    }
+    $pkManual = $cfg['pk_manual'] ?? false;
+@endphp
 
 @section('title', $cfg['titulo'])
 @section('page_title', 'Catálogo: ' . $cfg['titulo'])
@@ -26,32 +31,58 @@
                       action="{{ $editando ? route('catalogo.update', [$tabla, $editando->{$cfg['pk']}]) : route('catalogo.store', $tabla) }}"
                       x-data="{ enviando: false }" x-on:submit="enviando = true" class="p-6">
                     @csrf
-                    @if($editando) @method('PUT') @endif
+                    @if($editando)
+                        @method('PUT')
+                    @endif
 
                     @error('general')
                         <div class="mb-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-xs font-medium text-red-700"><i class="bi bi-exclamation-circle mt-0.5"></i>{{ $message }}</div>
                     @enderror
 
                     @foreach($cfg['campos'] as $c)
+                        @php
+                            $valorCampo = $editando ? $editando->{$c['col']} : '';
+                            $esSelect = ($c['tipo'] ?? '') === 'select';
+                            $opciones = collect();
+                            if ($esSelect) {
+                                $optionsModel = 'App\\Models\\' . $c['options_model'];
+                                $opciones = $optionsModel::query()->orderBy($c['options_label'])->get();
+                            }
+                            $valorSelect = (string) old($c['col'], $valorCampo);
+                            $soloLecturaPk = $editando && $c['col'] === $cfg['pk'] && ! $pkManual;
+                        @endphp
                         <label class="mb-3.5 block last:mb-0">
                             <span class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500">{{ $c['label'] }}{{ $c['req'] ? ' *' : '' }}</span>
-                            @if($c['tipo'] === 'date')
+                            @if(($c['tipo'] ?? '') === 'date')
                                 <input type="date" name="{{ $c['col'] }}"
-                                       value="{{ old($c['col'], optional($editando?->{$c['col']} ?? null)->format('Y-m-d') ?? old($c['col'])) }}"
+                                       value="{{ old($c['col'], $valorCampo ? \Carbon\Carbon::parse($valorCampo)->format('Y-m-d') : '') }}"
                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm outline-none transition focus:border-brand-400 focus:ring-4 focus:ring-brand-500/10 @error($c['col']) border-red-300 @enderror">
-                            @elseif($c['tipo'] === 'number')
+                            @elseif(($c['tipo'] ?? '') === 'number')
                                 <input type="number" step="1" name="{{ $c['col'] }}"
-                                       value="{{ old($c['col'], $editando?->{$c['col']} ?? '') }}"
+                                       value="{{ old($c['col'], $valorCampo) }}"
                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm outline-none transition focus:border-brand-400 focus:ring-4 focus:ring-brand-500/10 @error($c['col']) border-red-300 @enderror">
-                            @elseif($c['tipo'] === 'email')
+                            @elseif(($c['tipo'] ?? '') === 'email')
                                 <input type="email" name="{{ $c['col'] }}" maxlength="{{ $c['max'] ?? 100 }}"
-                                       value="{{ old($c['col'], $editando?->{$c['col']} ?? '') }}"
+                                       value="{{ old($c['col'], $valorCampo) }}"
                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm outline-none transition focus:border-brand-400 focus:ring-4 focus:ring-brand-500/10 @error($c['col']) border-red-300 @enderror">
+                            @elseif($esSelect)
+                                <select name="{{ $c['col'] }}"
+                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm outline-none transition focus:border-brand-400 focus:ring-4 focus:ring-brand-500/10 @error($c['col']) border-red-300 @enderror">
+                                    <option value="">Seleccione...</option>
+                                    @foreach($opciones as $opcion)
+                                        @php
+                                            $optionValue = (string) $opcion->{$c['options_value']};
+                                        @endphp
+                                        <option value="{{ $optionValue }}" @if($valorSelect === $optionValue) selected @endif>
+                                            {{ $opcion->{$c['options_label']} }} ({{ $optionValue }})
+                                        </option>
+                                    @endforeach
+                                </select>
                             @else
                                 <input type="text" name="{{ $c['col'] }}" maxlength="{{ $c['max'] ?? 255 }}"
-                                       value="{{ old($c['col'], $editando?->{$c['col']} ?? '') }}"
+                                       value="{{ old($c['col'], $valorCampo) }}"
                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm outline-none transition focus:border-brand-400 focus:ring-4 focus:ring-brand-500/10 @error($c['col']) border-red-300 @enderror"
-                                       @if($editando && $c['col'] === $cfg['pk'] && !$pkManual) readonly @endif>
+                                       @if($soloLecturaPk) readonly @endif>
                             @endif
                             @error($c['col'])<span class="mt-1 flex items-center gap-1 text-xs font-medium text-red-600"><i class="bi bi-exclamation-circle"></i>{{ $message }}</span>@enderror
                         </label>
@@ -90,15 +121,21 @@
                     @forelse($registros as $r)
                         <tr class="group transition hover:bg-brand-50/40">
                             @foreach($cfg['campos'] as $c)
-                                @php($valor = $r->{$c['col']})
+                                @php
+                                    $valor = $r->{$c['col']};
+                                    $textoCelda = '—';
+                                    if (($c['tipo'] ?? '') === 'date') {
+                                        $textoCelda = $valor ? \Carbon\Carbon::parse($valor)->format('d/m/Y') : '—';
+                                    } elseif (($c['tipo'] ?? '') === 'select' && $valor) {
+                                        $optionsModel = 'App\\Models\\' . $c['options_model'];
+                                        $opcion = $optionsModel::query()->whereKey($valor)->first();
+                                        $textoCelda = $opcion ? $opcion->{$c['options_label']} : $valor;
+                                    } elseif (($c['tipo'] ?? '') !== 'select') {
+                                        $textoCelda = $valor ?? '—';
+                                    }
+                                @endphp
                                 <td class="px-5 py-3.5 {{ $loop->first ? 'font-semibold text-slate-700' : 'text-slate-500' }}">
-                                    @if($c['tipo'] === 'date')
-                                        {{ $valor ? \Carbon\Carbon::parse($valor)->format('d/m/Y') : '—' }}
-                                    @elseif($c['tipo'] === 'email')
-                                        {{ $valor ?? '—' }}
-                                    @else
-                                        {{ $valor ?? '—' }}
-                                    @endif
+                                    {{ $textoCelda }}
                                 </td>
                             @endforeach
                             @if(auth()->user()->esAdmin())
@@ -125,4 +162,3 @@
     </div>
 </div>
 @endsection
-

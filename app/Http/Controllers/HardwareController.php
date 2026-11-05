@@ -86,9 +86,9 @@ class HardwareController extends Controller
             'hardware' => new Hardware(),
             'modulo' => $modulo,
             'tipos' => $this->tiposPorModulo($modulo),
-            'modelos' => Modelo::orderBy('Nombre')->get(),
+            'modelos' => Modelo::with('marca')->orderBy('Nombre')->get(),
             'procesadores' => Procesador::orderBy('Nombre')->get(),
-            'monitores' => Monitor::orderBy('MonitorID')->get(),
+            'monitores' => Monitor::with('proveedor')->orderBy('MonitorID')->get(),
             'usuarios' => UsuarioInv::orderBy('UsuarioInvNombre')->get(),
             'propietarios' => Propietario::orderBy('Nombre')->get(),
             'proveedores' => Proveedor::orderBy('Nombre')->get(),
@@ -158,10 +158,11 @@ class HardwareController extends Controller
     public function show(string $serial)
     {
         $hardware = Hardware::with([
-            'tipo', 'procesador', 'modelo', 'monitor', 'usuarioInv',
+            'tipo', 'procesador', 'modelo.marca', 'monitor.proveedor', 'usuarioInv',
             'propietario', 'proveedor', 'leasing', 'ubicacion', 'seguro',
             'softwaresLicenciados', 'softwaresNoLicenciados',
             'dispositivos', 'mantenimientos', 'observaciones', 'actas',
+            'cambiosDeUsuario',
         ])->findOrFail($serial);
 
         return view('hardware.show', [
@@ -195,9 +196,9 @@ class HardwareController extends Controller
             'hardware' => $hardware,
             'modulo' => $modulo,
             'tipos' => $this->tiposPorModulo($modulo),
-            'modelos' => Modelo::orderBy('Nombre')->get(),
+            'modelos' => Modelo::with('marca')->orderBy('Nombre')->get(),
             'procesadores' => Procesador::orderBy('Nombre')->get(),
-            'monitores' => Monitor::orderBy('MonitorID')->get(),
+            'monitores' => Monitor::with('proveedor')->orderBy('MonitorID')->get(),
             'usuarios' => UsuarioInv::orderBy('UsuarioInvNombre')->get(),
             'propietarios' => Propietario::orderBy('Nombre')->get(),
             'proveedores' => Proveedor::orderBy('Nombre')->get(),
@@ -292,9 +293,20 @@ class HardwareController extends Controller
         $data = $request->validate([
             'dispositivos' => ['nullable', 'array'],
             'dispositivos.*' => ['integer', 'exists:Dispositivo,Dispositivo_Codigo'],
+            'validaciones' => ['nullable', 'array'],
+            'validaciones.*' => ['integer', 'exists:Dispositivo,Dispositivo_Codigo'],
         ]);
 
-        $hardware->dispositivos()->sync($data['dispositivos'] ?? []);
+        $seleccionados = collect($data['dispositivos'] ?? [])->map(fn ($id) => (int) $id)->all();
+        $validados = collect($data['validaciones'] ?? [])->map(fn ($id) => (int) $id)->all();
+
+        $sync = [];
+        foreach ($seleccionados as $codigo) {
+            // Validación = periférico verificado físicamente en entrega/inventario.
+            $sync[$codigo] = ['Validacion' => in_array($codigo, $validados, true)];
+        }
+
+        $hardware->dispositivos()->sync($sync);
 
         return back()->with('ok', 'Dispositivos actualizados.');
     }
@@ -525,9 +537,7 @@ class HardwareController extends Controller
             $data[$flag] = $request->boolean($flag);
         }
 
-        $data['Hw_FechaCompra'] ??= now()->toDateString();
-        $data['Hw_ValorCompra'] ??= 0;
-        $data['Hw_FechaGarantiaFin'] ??= now()->addYear()->toDateString();
+        // Compra / valor / devolución son opcionales: no rellenar con hoy/0.
         if ($esSimple) {
             $data['ProcesadorID'] = null;
             $data['UsuarioInvID'] = null;
