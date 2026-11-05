@@ -136,7 +136,7 @@ class HardwareController extends Controller
         if (!$esSimple && $request->filled('observacion')) {
             $hardware->observaciones()->create([
                 'Observacion_Detalle' => $request->input('observacion'),
-                'Observacion_Fecha' => $request->input('observacion_fecha') ?: now()->toDateString(),
+                'Observacion_Fecha' => now()->toDateString(),
             ]);
         }
         if (!$esSimple) {
@@ -269,10 +269,12 @@ class HardwareController extends Controller
         $hardware = Hardware::findOrFail($serial);
         $data = $request->validate([
             'Observacion_Detalle' => ['required', 'string', 'max:300'],
-            'Observacion_Fecha' => ['required', 'date'],
         ]);
 
-        $hardware->observaciones()->create($data);
+        $hardware->observaciones()->create([
+            'Observacion_Detalle' => $data['Observacion_Detalle'],
+            'Observacion_Fecha' => now()->toDateString(),
+        ]);
 
         return back()->with('ok', 'Observación registrada.');
     }

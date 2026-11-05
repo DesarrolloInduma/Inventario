@@ -100,7 +100,7 @@
 <section class="rounded-3xl border border-slate-200 bg-white shadow-card">
     <fieldset class="m-0 min-w-0 border-0 p-0">
         <header class="border-b border-slate-100 px-6 py-4"><h3 class="font-bold text-slate-700"><i class="bi bi-chat-left-text mr-2 text-emerald-600"></i>6. Observaciones</h3></header>
-        <div class="p-6"><textarea name="observacion" maxlength="300" rows="3" placeholder="Observaciones iniciales..." class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm"></textarea><input type="date" name="observacion_fecha" value="{{ now()->format('Y-m-d') }}" class="mt-3 rounded-xl border border-slate-200 px-3 py-2 text-sm"></div>
+        <div class="p-6"><textarea name="observacion" maxlength="300" rows="3" placeholder="Observaciones iniciales..." class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm"></textarea></div>
     </fieldset>
 </section>
 

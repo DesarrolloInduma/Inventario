@@ -302,7 +302,11 @@ class HardwareActaAndSerialCargadorTest extends TestCase
         $response = $this->actingAs($user)->get(route('hardware.show', $hardware->Hw_Serial));
 
         $response->assertStatus(200);
-        $response->assertSee('Adjuntar acta de entrega aquí');
+        $response->assertSee('Seleccionar archivo');
+        $response->assertSee('Guardar acta');
+        $response->assertSee('Descargar acta en PDF');
+        $response->assertDontSee('Adjuntar acta de entrega aquí');
+        $response->assertDontSee('>Adjuntar acta<', false);
         $response->assertDontSee('Ir a editar equipo para adjuntar');
     }
 

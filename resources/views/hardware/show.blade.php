@@ -179,7 +179,6 @@
         <form method="POST" action="{{ route('hardware.observations.store', $hardware->Hw_Serial) }}" class="space-y-3 px-6 py-4">
             @csrf
             <textarea name="Observacion_Detalle" required maxlength="300" rows="3" placeholder="Detalle de la observación" class="w-full rounded-xl border border-slate-200 p-3 text-sm"></textarea>
-            <input type="date" name="Observacion_Fecha" value="{{ now()->format('Y-m-d') }}" required class="rounded-xl border border-slate-200 px-3 py-2 text-sm">
             <button class="rounded-xl bg-brand-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-brand-700">Registrar observación</button>
         </form>
         <ul class="divide-y divide-slate-50 px-6">
@@ -215,16 +214,11 @@
             <i class="bi bi-file-earmark-text text-emerald-600 text-lg"></i>
             <h3 class="text-sm font-bold text-slate-700">Actas y documentos adjuntos ({{ $hardware->actas->count() }})</h3>
         </span>
-        <div class="flex items-center gap-2">
-            <a href="{{ route('hardware.delivery-act', $hardware->Hw_Serial) }}?pdf=1" target="_blank" data-no-loader class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900">
-                <i class="bi bi-filetype-pdf text-red-500"></i> Descargar acta en PDF
-            </a>
-            <a href="#adjuntar-acta" class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm shadow-emerald-600/30 transition hover:bg-emerald-700">
-                <i class="bi bi-paperclip"></i> Adjuntar acta
-            </a>
-        </div>
+        <a href="{{ route('hardware.delivery-act', $hardware->Hw_Serial) }}?pdf=1" target="_blank" data-no-loader class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900">
+            <i class="bi bi-filetype-pdf text-red-500"></i> Descargar acta en PDF
+        </a>
     </header>
-    <div id="adjuntar-acta" class="border-b border-slate-100 bg-emerald-50/40 p-6">
+    <div class="border-b border-slate-100 bg-emerald-50/40 p-6">
         <form method="POST" action="{{ route('hardware.actas.store', $hardware->Hw_Serial) }}" enctype="multipart/form-data" class="grid gap-4 md:grid-cols-[1.2fr_1.2fr_auto] md:items-end">
             @csrf
             <div>
@@ -285,10 +279,7 @@
                     <i class="bi bi-file-earmark-arrow-up text-2xl"></i>
                 </span>
                 <p class="mt-3 text-sm font-semibold text-slate-700">Sin actas ni documentos adjuntos</p>
-                <p class="mt-1 max-w-sm text-xs text-slate-400">Puedes adjuntar el acta de entrega firmada o documentos relacionados aquí mismo.</p>
-                <a href="#adjuntar-acta" class="mt-4 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-sm shadow-emerald-600/30 transition hover:bg-emerald-700">
-                    <i class="bi bi-paperclip"></i> Adjuntar acta de entrega aquí
-                </a>
+                <p class="mt-1 max-w-sm text-xs text-slate-400">Usa «Seleccionar archivo» y «Guardar acta» arriba para adjuntar el acta de entrega o documentos relacionados.</p>
             </div>
         @endif
     </div>
