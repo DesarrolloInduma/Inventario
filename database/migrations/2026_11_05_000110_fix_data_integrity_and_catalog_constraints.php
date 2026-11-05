@@ -31,13 +31,15 @@ return new class extends Migration
         });
     }
 
-    private function fechaDevolucionColumn(): string
+    private function fechaEntregaColumn(): ?string
     {
-        if (Schema::hasColumn('Hardware', 'Hw_FechaDevolucion')) {
-            return 'Hw_FechaDevolucion';
+        foreach (['Hw_FechaEntrega', 'Hw_FechaDevolucion', 'Hw_FechaGarantiaFin'] as $column) {
+            if (Schema::hasColumn('Hardware', $column)) {
+                return $column;
+            }
         }
 
-        return 'Hw_FechaGarantiaFin';
+        return null;
     }
 
     private function repairMonitorProveedor(): void
@@ -84,17 +86,16 @@ return new class extends Migration
             ->whereRaw('LOWER(Hw_Estado) = ?', ['inactivo'])
             ->update(['Hw_Estado' => 'Bueno']);
 
-        $fechaDevolucion = $this->fechaDevolucionColumn();
+        $fechaEntrega = $this->fechaEntregaColumn();
+
+        $select = ['h.Hw_Serial', 'h.Hw_FechaCompra', 'l.FechaInicio'];
+        if ($fechaEntrega) {
+            $select[] = "h.{$fechaEntrega} as fecha_entrega";
+        }
 
         $equipos = DB::table('Hardware as h')
             ->leftJoin('Leasing as l', 'h.LeasingID', '=', 'l.LeasingID')
-            ->select(
-                'h.Hw_Serial',
-                'h.Hw_FechaCompra',
-                "h.{$fechaDevolucion} as fecha_devolucion",
-                'l.FechaInicio',
-                'l.FechaVencimiento'
-            )
+            ->select($select)
             ->get();
 
         foreach ($equipos as $eq) {
@@ -104,8 +105,9 @@ return new class extends Migration
                 $updates['Hw_FechaCompra'] = $eq->FechaInicio;
             }
 
-            if ($eq->FechaVencimiento && $eq->fecha_devolucion && $eq->fecha_devolucion > $eq->FechaVencimiento) {
-                $updates[$fechaDevolucion] = $eq->FechaVencimiento;
+            // Hw_FechaEntrega = día del préstamo; no se amarra al fin de leasing.
+            if ($fechaEntrega && $eq->FechaInicio && empty($eq->fecha_entrega)) {
+                $updates[$fechaEntrega] = $eq->FechaInicio;
             }
 
             if ($updates !== []) {
@@ -204,7 +206,9 @@ return new class extends Migration
             if (Schema::hasColumn('Hardware', 'Hw_FechaCompra')) {
                 $table->date('Hw_FechaCompra')->nullable()->change();
             }
-            if (Schema::hasColumn('Hardware', 'Hw_FechaDevolucion')) {
+            if (Schema::hasColumn('Hardware', 'Hw_FechaEntrega')) {
+                $table->date('Hw_FechaEntrega')->nullable()->change();
+            } elseif (Schema::hasColumn('Hardware', 'Hw_FechaDevolucion')) {
                 $table->date('Hw_FechaDevolucion')->nullable()->change();
             } elseif (Schema::hasColumn('Hardware', 'Hw_FechaGarantiaFin')) {
                 $table->date('Hw_FechaGarantiaFin')->nullable()->change();

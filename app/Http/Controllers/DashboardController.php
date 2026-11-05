@@ -70,7 +70,6 @@ class DashboardController extends Controller
             'totalAuditorias' => Auditoria::count(),
             'totalUsuariosInv' => UsuarioInv::count(),
 
-            'devolucionesVencidas' => Hardware::where('Hw_FechaDevolucion', '<', now()->toDateString())->count(),
             'equiposInactivos' => Hardware::where('Activo', false)->count(),
 
             'chartTipos' => [
@@ -91,7 +90,7 @@ class DashboardController extends Controller
             ],
 
             'recientes' => Hardware::with(['tipo', 'modelo.marca', 'usuarioInv'])
-                ->orderByDesc('Hw_FechaDevolucion')
+                ->orderByDesc('Hw_FechaEntrega')
                 ->orderBy('Hw_Serial')
                 ->take(6)
                 ->get(),

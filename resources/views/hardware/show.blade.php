@@ -89,7 +89,7 @@
             @foreach([
                 ['Usuario asignado', trim(($hardware->usuarioInv?->UsuarioInvNombre ?? '') . (($hardware->usuarioInv?->UsuarioInvArea ?? null) ? ' · ' . $hardware->usuarioInv->UsuarioInvArea : '')) ?: null, 'bi-person-check'],
                 ['Monitor', trim(($hardware->monitor?->MonitorID ?? '') . ' ' . ($hardware->monitor?->Monitor_Modelo ?? '')) ?: null, 'bi-display'],
-                ['Fecha de devolución', 'vencimiento', 'bi-shield-check'],
+                ['Fecha de entrega', $hardware->Hw_FechaEntrega?->format('d/m/Y'), 'bi-box-arrow-in-right'],
                 ['Propietario', $hardware->propietario->Nombre ?? null, 'bi-building'],
                 ['Proveedor', $hardware->proveedor->Nombre ?? null, 'bi-truck'],
                 ['Leasing', ($hardware->leasing->Entidad ?? null) ? ($hardware->leasing->Entidad . ' · ' . $hardware->leasing->Contrato) : null, 'bi-file-earmark-text'],
@@ -98,13 +98,7 @@
             ] as [$label, $valor, $icono])
                 <div class="flex items-center justify-between gap-4 py-3">
                     <dt class="flex items-center gap-2 text-sm text-slate-400"><i class="bi {{ $icono }} text-xs"></i>{{ $label }}</dt>
-                    <dd class="text-right text-sm font-semibold text-slate-700">
-                        @if($valor === 'vencimiento')
-                            <x-vencimiento :fecha="$hardware->Hw_FechaDevolucion" dias />
-                        @else
-                            {{ $valor ?: '—' }}
-                        @endif
-                    </dd>
+                    <dd class="text-right text-sm font-semibold text-slate-700">{{ $valor ?: '—' }}</dd>
                 </div>
             @endforeach
         </dl>

@@ -28,7 +28,7 @@
         <div class="max-h-[min(62vh,620px)] overflow-auto">
             <table class="w-full min-w-[1120px] text-left text-sm">
                 <thead class="sticky top-0 z-10 bg-slate-900 text-[11px] uppercase tracking-wider text-white">
-                    <tr><th class="px-4 py-3.5">Acciones</th><th class="px-4 py-3.5">Serial</th><th class="px-4 py-3.5">Nombre equipo</th><th class="px-4 py-3.5">Tipo</th><th class="px-4 py-3.5">Usuario</th><th class="px-4 py-3.5">Cargo</th><th class="px-4 py-3.5">Área</th><th class="px-4 py-3.5">Correo</th><th class="px-4 py-3.5">Ubicación</th><th class="px-4 py-3.5">Fecha de devolución</th></tr>
+                    <tr><th class="px-4 py-3.5">Acciones</th><th class="px-4 py-3.5">Serial</th><th class="px-4 py-3.5">Nombre equipo</th><th class="px-4 py-3.5">Tipo</th><th class="px-4 py-3.5">Usuario</th><th class="px-4 py-3.5">Cargo</th><th class="px-4 py-3.5">Área</th><th class="px-4 py-3.5">Correo</th><th class="px-4 py-3.5">Ubicación</th><th class="px-4 py-3.5">Fecha de entrega</th></tr>
                 </thead>
                 <tbody x-ref="rows" class="divide-y divide-slate-100">
                     @forelse($hardware as $eq)
@@ -42,7 +42,7 @@
                             <td class="px-4 py-3.5 text-slate-600">{{ $eq->usuarioInv->UsuarioInvArea ?? '—' }}</td>
                             <td class="px-4 py-3.5 text-slate-600">{{ $eq->usuarioInv->UsuarioInvCorreo ?? '—' }}</td>
                             <td class="px-4 py-3.5 text-slate-600">{{ $eq->ubicacion->UbicacionNombre ?? '—' }}</td>
-                            <td class="px-4 py-3.5"><x-vencimiento :fecha="$eq->Hw_FechaDevolucion" /></td>
+                            <td class="px-4 py-3.5 text-sm text-slate-600">{{ $eq->Hw_FechaEntrega?->format('d/m/Y') ?? '—' }}</td>
                         </tr>
                     @empty
                         <tr><td colspan="10"><x-empty-state icono="{{ $iconosModulo[$modulo] }}" texto="{{ $q !== '' ? 'Sin resultados para «' . $q . '».' : 'Aún no hay ' . strtolower($tituloModulo) . ' registrados.' }}" accion="{{ $rutasCrear[$modulo] }}" boton="{{ 'Registrar ' . ($modulo === 'computadores' ? 'computador' : ($modulo === 'impresoras' ? 'impresora' : 'cámara')) }}" /></td></tr>
@@ -50,7 +50,7 @@
                 </tbody>
             </table>
         </div>
-        <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-3.5 text-sm text-slate-500"><div>{{ $hardware->links() }}</div><div class="flex flex-wrap items-center gap-3 text-xs"><span class="inline-flex items-center gap-1.5"><i class="size-3 rounded-sm bg-slate-200"></i>Devolución vigente</span><span class="inline-flex items-center gap-1.5"><i class="size-3 rounded-sm bg-lime-300"></i>Devolución &lt; 6 meses</span><span class="inline-flex items-center gap-1.5"><i class="size-3 rounded-sm bg-orange-400"></i>Devolución &lt; 3 meses</span><span class="inline-flex items-center gap-1.5"><i class="size-3 rounded-sm bg-red-500"></i>Devolución vencida</span></div></div>
+        <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-3.5 text-sm text-slate-500"><div>{{ $hardware->links() }}</div><div class="text-xs text-slate-400">Fecha de entrega = día del préstamo al usuario</div></div>
     </div>
 </div>
 @endsection

@@ -98,7 +98,8 @@ class DellLatitude3420ImportSeeder extends Seeder
                 'Hw_Ram' => isset($row['Hw_Ram']) ? Str::limit((string) $row['Hw_Ram'], 50, '') : null,
                 'Hw_Disco_Duro' => isset($row['Hw_Disco_Duro']) ? Str::limit((string) $row['Hw_Disco_Duro'], 50, '') : null,
                 'Hw_FechaCompra' => $this->nullableDate($row['Hw_FechaCompra'] ?? null),
-                'Hw_FechaDevolucion' => $leasing->FechaVencimiento,
+                // Día del préstamo / entrega al usuario (no fin de leasing).
+                'Hw_FechaEntrega' => $this->nullableDate($row['Hw_FechaCompra'] ?? null),
                 'TipoID' => $tipoPortatil,
                 'ModeloID' => $modeloId,
                 'MonitorID' => null,

@@ -33,7 +33,7 @@ class DataIntegrityFixesTest extends TestCase
         $this->assertSame('16 GB', $hardware->Hw_Ram);
         $this->assertSame('Bueno', $hardware->Hw_Estado);
         $this->assertSame('2024-01-15', $hardware->Hw_FechaCompra->toDateString());
-        $this->assertSame('2027-01-15', $hardware->Hw_FechaDevolucion->toDateString());
+        $this->assertSame('2024-01-15', $hardware->Hw_FechaEntrega->toDateString());
         $this->assertFalse(Schema::hasColumn('Hardware', 'Hw_ValorCompra'));
 
         $this->assertDatabaseHas('Modelo', [
@@ -108,7 +108,7 @@ class DataIntegrityFixesTest extends TestCase
         ]);
     }
 
-    public function test_hardware_show_uses_physical_state_and_return_date_labels(): void
+    public function test_hardware_show_uses_physical_state_and_delivery_date_labels(): void
     {
         $this->seed();
         $user = User::where('email', 'admin@inventario.local')->firstOrFail();
@@ -117,7 +117,7 @@ class DataIntegrityFixesTest extends TestCase
             ->get(route('hardware.show', 'DL3420-IND-001'))
             ->assertOk()
             ->assertSee('Estado físico')
-            ->assertSee('Fecha de devolución')
+            ->assertSee('Fecha de entrega')
             ->assertSee('16 GB')
             ->assertSee('Intel Core i5-10300H')
             ->assertSee('Validado')
@@ -172,7 +172,7 @@ class DataIntegrityFixesTest extends TestCase
             'ProveedorID' => 'PROV001',
             'LeasingID' => 1,
             'Hw_FechaCompra' => '2024-01-15',
-            'Hw_FechaDevolucion' => '2027-01-15',
+            'Hw_FechaEntrega' => '2024-01-15',
             'Hw_Estado' => 'Bueno',
             'Activo' => true,
             'Hw_Ram' => '16 GB',

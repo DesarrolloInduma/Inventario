@@ -59,7 +59,7 @@ class HardwareActaAndSerialCargadorTest extends TestCase
             'ProveedorID' => $proveedor->ProveedorID,
             'LeasingID' => $leasing->LeasingID,
             'Hw_FechaCompra' => now()->toDateString(),
-            'Hw_FechaDevolucion' => now()->addYear()->toDateString(),
+            'Hw_FechaEntrega' => now()->addYear()->toDateString(),
             'Activo' => true,
         ]);
 
@@ -170,7 +170,7 @@ class HardwareActaAndSerialCargadorTest extends TestCase
             'ProveedorID' => $proveedor->ProveedorID,
             'LeasingID' => $leasing->LeasingID,
             'Hw_FechaCompra' => now()->toDateString(),
-            'Hw_FechaDevolucion' => now()->addYear()->toDateString(),
+            'Hw_FechaEntrega' => now()->addYear()->toDateString(),
             'Activo' => true,
         ]);
 
@@ -233,7 +233,7 @@ class HardwareActaAndSerialCargadorTest extends TestCase
             'ProveedorID' => $proveedor->ProveedorID,
             'LeasingID' => $leasing->LeasingID,
             'Hw_FechaCompra' => now()->toDateString(),
-            'Hw_FechaDevolucion' => now()->addYear()->toDateString(),
+            'Hw_FechaEntrega' => now()->addYear()->toDateString(),
             'Activo' => true,
         ]);
 
@@ -295,7 +295,7 @@ class HardwareActaAndSerialCargadorTest extends TestCase
             'ProveedorID' => $proveedor->ProveedorID,
             'LeasingID' => $leasing->LeasingID,
             'Hw_FechaCompra' => now()->toDateString(),
-            'Hw_FechaDevolucion' => now()->addYear()->toDateString(),
+            'Hw_FechaEntrega' => now()->addYear()->toDateString(),
             'Activo' => true,
         ]);
 
@@ -348,7 +348,7 @@ class HardwareActaAndSerialCargadorTest extends TestCase
             'ProveedorID' => $proveedor->ProveedorID,
             'LeasingID' => $leasing->LeasingID,
             'Hw_FechaCompra' => now()->toDateString(),
-            'Hw_FechaDevolucion' => now()->addYear()->toDateString(),
+            'Hw_FechaEntrega' => now()->addYear()->toDateString(),
             'Activo' => true,
         ]);
 

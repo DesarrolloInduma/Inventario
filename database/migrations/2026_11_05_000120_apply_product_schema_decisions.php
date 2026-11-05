@@ -14,9 +14,13 @@ return new class extends Migration
             });
         }
 
-        if (Schema::hasColumn('Hardware', 'Hw_FechaGarantiaFin') && ! Schema::hasColumn('Hardware', 'Hw_FechaDevolucion')) {
+        // Preferir directamente FechaEntrega (día del préstamo). Si aún existe
+        // FechaDevolucion de un rename intermedio, 000130 lo unifica.
+        if (Schema::hasColumn('Hardware', 'Hw_FechaGarantiaFin')
+            && ! Schema::hasColumn('Hardware', 'Hw_FechaEntrega')
+            && ! Schema::hasColumn('Hardware', 'Hw_FechaDevolucion')) {
             Schema::table('Hardware', function (Blueprint $table) {
-                $table->renameColumn('Hw_FechaGarantiaFin', 'Hw_FechaDevolucion');
+                $table->renameColumn('Hw_FechaGarantiaFin', 'Hw_FechaEntrega');
             });
         }
 
@@ -43,7 +47,11 @@ return new class extends Migration
             });
         }
 
-        if (Schema::hasColumn('Hardware', 'Hw_FechaDevolucion') && ! Schema::hasColumn('Hardware', 'Hw_FechaGarantiaFin')) {
+        if (Schema::hasColumn('Hardware', 'Hw_FechaEntrega') && ! Schema::hasColumn('Hardware', 'Hw_FechaGarantiaFin')) {
+            Schema::table('Hardware', function (Blueprint $table) {
+                $table->renameColumn('Hw_FechaEntrega', 'Hw_FechaGarantiaFin');
+            });
+        } elseif (Schema::hasColumn('Hardware', 'Hw_FechaDevolucion') && ! Schema::hasColumn('Hardware', 'Hw_FechaGarantiaFin')) {
             Schema::table('Hardware', function (Blueprint $table) {
                 $table->renameColumn('Hw_FechaDevolucion', 'Hw_FechaGarantiaFin');
             });

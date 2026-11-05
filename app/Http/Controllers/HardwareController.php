@@ -512,7 +512,7 @@ class HardwareController extends Controller
             'Hw_Ram' => ['nullable', 'string', 'max:50'],
             'Hw_Disco_Duro' => ['nullable', 'string', 'max:50'],
             'Hw_FechaCompra' => ['nullable', 'date'],
-            'Hw_FechaDevolucion' => ['nullable', 'date'],
+            'Hw_FechaEntrega' => ['nullable', 'date'],
             'TipoID' => ['required', 'integer', 'exists:Tipo,TipoID'],
             'ModeloID' => ['required', 'integer', 'exists:Modelo,ModeloID'],
             'MonitorID' => ['nullable', 'string', 'exists:Monitor,MonitorID'],

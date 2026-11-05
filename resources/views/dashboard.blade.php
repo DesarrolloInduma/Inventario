@@ -38,22 +38,13 @@
 </div>
 
 {{-- Alertas rápidas --}}
-@if($devolucionesVencidas > 0 || $equiposInactivos > 0)
+@if($equiposInactivos > 0)
     <div class="mt-4 grid gap-3 sm:grid-cols-2">
-        @if($devolucionesVencidas > 0)
-            <a href="{{ route('hardware.index') }}" class="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800 transition hover:border-amber-300 hover:bg-amber-100">
-                <i class="bi bi-shield-exclamation text-lg"></i>
-                <strong>{{ $devolucionesVencidas }}</strong> equipo(s) con fecha de devolución vencida
-                <i class="bi bi-chevron-right ml-auto text-xs"></i>
-            </a>
-        @endif
-        @if($equiposInactivos > 0)
-            <a href="{{ route('hardware.index') }}" class="flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800 transition hover:border-red-300 hover:bg-red-100">
-                <i class="bi bi-x-octagon text-lg"></i>
-                <strong>{{ $equiposInactivos }}</strong> equipo(s) inactivos
-                <i class="bi bi-chevron-right ml-auto text-xs"></i>
-            </a>
-        @endif
+        <a href="{{ route('hardware.index') }}" class="flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800 transition hover:border-red-300 hover:bg-red-100">
+            <i class="bi bi-x-octagon text-lg"></i>
+            <strong>{{ $equiposInactivos }}</strong> equipo(s) inactivos
+            <i class="bi bi-chevron-right ml-auto text-xs"></i>
+        </a>
     </div>
 @endif
 

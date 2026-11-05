@@ -101,7 +101,7 @@ class CatalogoController extends Controller
                 ['col' => 'Monitor_Modelo', 'label' => 'Modelo', 'tipo' => 'text', 'req' => false, 'max' => 20],
                 ['col' => 'Monitor_Tamaño', 'label' => 'Tamaño', 'tipo' => 'text', 'req' => false, 'max' => 10],
                 ['col' => 'FechaCompra', 'label' => 'Fecha de compra', 'tipo' => 'date', 'req' => true],
-                ['col' => 'VencimientoGarantia', 'label' => 'Fecha de devolución / fin garantía', 'tipo' => 'date', 'req' => true],
+                ['col' => 'VencimientoGarantia', 'label' => 'Fin de garantía', 'tipo' => 'date', 'req' => true],
                 [
                     'col' => 'ProveedorID',
                     'label' => 'Proveedor',
