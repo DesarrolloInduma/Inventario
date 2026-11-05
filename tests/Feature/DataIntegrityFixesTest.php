@@ -125,6 +125,56 @@ class DataIntegrityFixesTest extends TestCase
             ->assertDontSee('ValorCompra');
     }
 
+    public function test_create_and_edit_forms_expose_and_persist_fecha_entrega(): void
+    {
+        $this->seed();
+        $user = User::where('email', 'admin@inventario.local')->firstOrFail();
+        $hardware = Hardware::findOrFail('DL3420-IND-001');
+
+        $this->actingAs($user)
+            ->get(route('hardware.create'))
+            ->assertOk()
+            ->assertSee('name="Hw_FechaEntrega"', false)
+            ->assertSee('Fecha de entrega')
+            ->assertSee('Día del préstamo')
+            ->assertDontSee('ValorCompra');
+
+        $this->actingAs($user)
+            ->get(route('hardware.edit', $hardware->Hw_Serial))
+            ->assertOk()
+            ->assertSee('name="Hw_FechaEntrega"', false)
+            ->assertSee('value="2024-01-15"', false);
+
+        $this->actingAs($user)->put(route('hardware.update', $hardware->Hw_Serial), [
+            'Hw_Serial' => $hardware->Hw_Serial,
+            'Hw_Nombre' => $hardware->Hw_Nombre,
+            'Hw_Serial_Cargador' => $hardware->Hw_Serial_Cargador,
+            'TipoID' => $hardware->TipoID,
+            'ModeloID' => $hardware->ModeloID,
+            'MonitorID' => $hardware->MonitorID,
+            'PropietarioID' => $hardware->PropietarioID,
+            'ProveedorID' => $hardware->ProveedorID,
+            'LeasingID' => $hardware->LeasingID,
+            'UbicacionId' => $hardware->UbicacionId,
+            'SeguroID' => $hardware->SeguroID,
+            'Hw_Ram' => $hardware->Hw_Ram,
+            'Hw_Disco_Duro' => $hardware->Hw_Disco_Duro,
+            'Hw_Estado' => $hardware->Hw_Estado,
+            'Hw_FechaEntrega' => '2025-06-20',
+            'procesador_nombre' => $hardware->procesador->Nombre,
+            'procesador_velocidad' => $hardware->procesador->Velocidad,
+            'usuario_id' => $hardware->usuarioInv->UsuarioInvID,
+            'usuario_nombre' => $hardware->usuarioInv->UsuarioInvNombre,
+            'usuario_cargo' => $hardware->usuarioInv->UsuarioInvCargo,
+            'usuario_area' => $hardware->usuarioInv->UsuarioInvArea,
+            'usuario_correo' => $hardware->usuarioInv->UsuarioInvCorreo,
+            'Activo' => 1,
+            'Revisado' => 1,
+        ])->assertRedirect(route('hardware.show', $hardware->Hw_Serial));
+
+        $this->assertSame('2025-06-20', $hardware->fresh()->Hw_FechaEntrega->toDateString());
+    }
+
     public function test_migration_repairs_orphan_monitor_and_inactive_state_conflict(): void
     {
         // Escenario residual típico de la auditoría (antes de la migración de integridad).
