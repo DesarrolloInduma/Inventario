@@ -127,6 +127,22 @@ class DataIntegrityFixesTest extends TestCase
             ->assertDontSee('ValorCompra');
     }
 
+    public function test_consulta_role_does_not_see_inventory_dates_on_show(): void
+    {
+        $this->seed();
+        $consulta = User::where('email', 'consulta@inventario.local')->firstOrFail();
+        $this->assertFalse($consulta->esAdmin());
+
+        $this->actingAs($consulta)
+            ->get(route('hardware.show', 'DL3420-IND-001'))
+            ->assertOk()
+            ->assertSee('Estado físico')
+            ->assertDontSee('Fecha de entrega')
+            ->assertDontSee('Fecha de ingreso al inventario')
+            ->assertDontSee('20/01/2024')
+            ->assertDontSee('15/01/2024');
+    }
+
     public function test_create_and_edit_forms_expose_and_persist_fecha_entrega(): void
     {
         $this->seed();

@@ -86,17 +86,24 @@
             <i class="bi bi-person-badge text-emerald-500"></i><h3 class="text-sm font-bold text-slate-700">Asignación y contratos</h3>
         </header>
         <dl class="divide-y divide-slate-50 px-6">
-            @foreach([
-                ['Usuario asignado', trim(($hardware->usuarioInv?->UsuarioInvNombre ?? '') . (($hardware->usuarioInv?->UsuarioInvArea ?? null) ? ' · ' . $hardware->usuarioInv->UsuarioInvArea : '')) ?: null, 'bi-person-check'],
-                ['Monitor', trim(($hardware->monitor?->MonitorID ?? '') . ' ' . ($hardware->monitor?->Monitor_Modelo ?? '')) ?: null, 'bi-display'],
-                ['Fecha de ingreso al inventario', $hardware->Hw_FechaIngresoInventario?->format('d/m/Y'), 'bi-calendar-plus'],
-                ['Fecha de entrega', $hardware->Hw_FechaEntrega?->format('d/m/Y'), 'bi-box-arrow-in-right'],
-                ['Propietario', $hardware->propietario->Nombre ?? null, 'bi-building'],
-                ['Proveedor', $hardware->proveedor->Nombre ?? null, 'bi-truck'],
-                ['Leasing', ($hardware->leasing->Entidad ?? null) ? ($hardware->leasing->Entidad . ' · ' . $hardware->leasing->Contrato) : null, 'bi-file-earmark-text'],
-                ['Ubicación', $hardware->ubicacion->UbicacionNombre ?? null, 'bi-geo-alt'],
-                ['Seguro', $hardware->seguro->Seguro_Nombre ?? null, 'bi-umbrella'],
-            ] as [$label, $valor, $icono])
+            @php
+                $filasAsignacion = [
+                    ['Usuario asignado', trim(($hardware->usuarioInv?->UsuarioInvNombre ?? '') . (($hardware->usuarioInv?->UsuarioInvArea ?? null) ? ' · ' . $hardware->usuarioInv->UsuarioInvArea : '')) ?: null, 'bi-person-check'],
+                    ['Monitor', trim(($hardware->monitor?->MonitorID ?? '') . ' ' . ($hardware->monitor?->Monitor_Modelo ?? '')) ?: null, 'bi-display'],
+                ];
+                if (auth()->user()->esAdmin()) {
+                    $filasAsignacion[] = ['Fecha de ingreso al inventario', $hardware->Hw_FechaIngresoInventario?->format('d/m/Y'), 'bi-calendar-plus'];
+                    $filasAsignacion[] = ['Fecha de entrega', $hardware->Hw_FechaEntrega?->format('d/m/Y'), 'bi-box-arrow-in-right'];
+                }
+                $filasAsignacion = array_merge($filasAsignacion, [
+                    ['Propietario', $hardware->propietario->Nombre ?? null, 'bi-building'],
+                    ['Proveedor', $hardware->proveedor->Nombre ?? null, 'bi-truck'],
+                    ['Leasing', ($hardware->leasing->Entidad ?? null) ? ($hardware->leasing->Entidad . ' · ' . $hardware->leasing->Contrato) : null, 'bi-file-earmark-text'],
+                    ['Ubicación', $hardware->ubicacion->UbicacionNombre ?? null, 'bi-geo-alt'],
+                    ['Seguro', $hardware->seguro->Seguro_Nombre ?? null, 'bi-umbrella'],
+                ]);
+            @endphp
+            @foreach($filasAsignacion as [$label, $valor, $icono])
                 <div class="flex items-center justify-between gap-4 py-3">
                     <dt class="flex items-center gap-2 text-sm text-slate-400"><i class="bi {{ $icono }} text-xs"></i>{{ $label }}</dt>
                     <dd class="text-right text-sm font-semibold text-slate-700">{{ $valor ?: '—' }}</dd>
