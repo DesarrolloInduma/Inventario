@@ -152,66 +152,106 @@
     </div>
 </div>
 
-{{-- Dispositivos, observaciones e historial --}}
+{{-- Dispositivos, observaciones e historial (listas compactas + ver más) --}}
+@php
+    $dispositivosLista = $dispositivosDisponibles;
+    $obsLista = $hardware->observaciones;
+    $cambiosLista = $hardware->cambiosDeUsuario;
+@endphp
 <div class="mt-5 grid gap-5 lg:grid-cols-3">
-    <div class="rounded-3xl border border-slate-200 bg-white shadow-card">
-        <header class="border-b border-slate-100 px-6 py-4">
-            <h3 class="text-sm font-bold text-slate-700">Dispositivos asociados</h3>
-            <p class="mt-1 text-xs text-slate-400">Marca “Validado” cuando el periférico fue verificado físicamente.</p>
-        </header>
-        <form method="POST" action="{{ route('hardware.devices.sync', $hardware->Hw_Serial) }}" class="space-y-3 px-6 py-4">
-            @csrf @method('PUT')
-            @foreach($dispositivosDisponibles as $dispositivo)
-                @php($asociado = $hardware->dispositivos->firstWhere('Dispositivo_Codigo', $dispositivo->Dispositivo_Codigo))
-                <div class="rounded-xl border border-slate-200 p-3">
-                    <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
-                        <input type="checkbox" name="dispositivos[]" value="{{ $dispositivo->Dispositivo_Codigo }}" @checked((bool) $asociado)>
-                        {{ $dispositivo->Dispositivos_Nombre }}
-                    </label>
-                    <label class="mt-2 flex items-center gap-2 pl-6 text-xs text-slate-500">
-                        <input type="checkbox" name="validaciones[]" value="{{ $dispositivo->Dispositivo_Codigo }}" @checked((bool) ($asociado?->pivot?->Validacion))>
-                        @if($asociado?->pivot?->Validacion)
-                            <span class="font-semibold text-emerald-600">Validado</span>
-                        @else
-                            <span class="font-semibold text-amber-600">Pendiente</span>
-                        @endif
-                    </label>
+    <div class="rounded-3xl border border-slate-200 bg-white shadow-card" x-data="{ open: true, more: false, limit: 4 }">
+        <button type="button" @click="open = !open" class="flex w-full items-center justify-between gap-3 border-b border-slate-100 px-6 py-4 text-left">
+            <span>
+                <h3 class="text-sm font-bold text-slate-700">Dispositivos asociados <span class="font-semibold text-slate-400">({{ $dispositivosLista->count() }})</span></h3>
+                <p class="mt-1 text-xs text-slate-400">Marca “Validado” cuando el periférico fue verificado físicamente.</p>
+            </span>
+            <i class="bi bi-chevron-down text-slate-400 transition" :class="open && 'rotate-180'"></i>
+        </button>
+        <div x-show="open" x-cloak class="px-6 py-4">
+            <form method="POST" action="{{ route('hardware.devices.sync', $hardware->Hw_Serial) }}" class="space-y-2">
+                @csrf @method('PUT')
+                @foreach($dispositivosLista as $i => $dispositivo)
+                    @php($asociado = $hardware->dispositivos->firstWhere('Dispositivo_Codigo', $dispositivo->Dispositivo_Codigo))
+                    <div class="rounded-xl border border-slate-200 px-3 py-2" x-show="more || {{ $i }} < limit">
+                        <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
+                            <input type="checkbox" name="dispositivos[]" value="{{ $dispositivo->Dispositivo_Codigo }}" @checked((bool) $asociado)>
+                            {{ $dispositivo->Dispositivos_Nombre }}
+                        </label>
+                        <label class="mt-1.5 flex items-center gap-2 pl-6 text-xs text-slate-500">
+                            <input type="checkbox" name="validaciones[]" value="{{ $dispositivo->Dispositivo_Codigo }}" @checked((bool) ($asociado?->pivot?->Validacion))>
+                            @if($asociado?->pivot?->Validacion)
+                                <span class="font-semibold text-emerald-600">Validado</span>
+                            @else
+                                <span class="font-semibold text-amber-600">Pendiente</span>
+                            @endif
+                        </label>
+                    </div>
+                @endforeach
+                @if($dispositivosLista->count() > 4)
+                    <button type="button" @click="more = !more" class="text-xs font-bold text-brand-600 hover:text-brand-700" x-text="more ? 'Ver menos' : 'Ver más ({{ $dispositivosLista->count() - 4 }})'"></button>
+                @endif
+                <button class="mt-2 rounded-xl bg-brand-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-brand-700">Guardar dispositivos</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="rounded-3xl border border-slate-200 bg-white shadow-card" x-data="{ open: true, more: false, limit: 3 }">
+        <button type="button" @click="open = !open" class="flex w-full items-center justify-between gap-3 border-b border-slate-100 px-6 py-4 text-left">
+            <h3 class="text-sm font-bold text-slate-700">Observaciones <span class="font-semibold text-slate-400">({{ $obsLista->count() }})</span></h3>
+            <i class="bi bi-chevron-down text-slate-400 transition" :class="open && 'rotate-180'"></i>
+        </button>
+        <div x-show="open" x-cloak>
+            <form method="POST" action="{{ route('hardware.observations.store', $hardware->Hw_Serial) }}" class="space-y-3 border-b border-slate-50 px-6 py-4">
+                @csrf
+                <textarea name="Observacion_Detalle" required maxlength="300" rows="2" placeholder="Nueva observación..." class="w-full rounded-xl border border-slate-200 p-3 text-sm"></textarea>
+                <button class="rounded-xl bg-brand-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-brand-700">Registrar</button>
+            </form>
+            <ul class="divide-y divide-slate-50 px-6">
+                @forelse($obsLista as $i => $observacion)
+                    <li class="flex items-start justify-between gap-3 py-3 text-sm text-slate-600" x-show="more || {{ $i }} < limit">
+                        <span class="line-clamp-3">{{ $observacion->Observacion_Detalle }}<small class="mt-0.5 block text-xs text-slate-400">{{ optional($observacion->Observacion_Fecha)->format('d/m/Y') }}</small></span>
+                        <form method="POST" action="{{ route('hardware.observations.destroy', [$hardware->Hw_Serial, $observacion->Observacion_Id]) }}">@csrf @method('DELETE')<button title="Eliminar" class="grid size-7 place-items-center rounded-lg bg-red-50 text-red-600 transition hover:bg-red-100"><i class="bi bi-trash3 text-xs"></i></button></form>
+                    </li>
+                @empty
+                    <li class="py-4 text-center text-xs text-slate-400">Sin observaciones.</li>
+                @endforelse
+            </ul>
+            @if($obsLista->count() > 3)
+                <div class="border-t border-slate-50 px-6 py-3">
+                    <button type="button" @click="more = !more" class="text-xs font-bold text-brand-600 hover:text-brand-700" x-text="more ? 'Ver menos' : 'Ver más ({{ $obsLista->count() - 3 }})'"></button>
                 </div>
-            @endforeach
-            <button class="rounded-xl bg-brand-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-brand-700">Guardar dispositivos</button>
-        </form>
+            @endif
+        </div>
     </div>
 
-    <div class="rounded-3xl border border-slate-200 bg-white shadow-card">
-        <header class="border-b border-slate-100 px-6 py-4"><h3 class="text-sm font-bold text-slate-700">Nueva observación</h3></header>
-        <form method="POST" action="{{ route('hardware.observations.store', $hardware->Hw_Serial) }}" class="space-y-3 px-6 py-4">
-            @csrf
-            <textarea name="Observacion_Detalle" required maxlength="300" rows="3" placeholder="Detalle de la observación" class="w-full rounded-xl border border-slate-200 p-3 text-sm"></textarea>
-            <button class="rounded-xl bg-brand-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-brand-700">Registrar observación</button>
-        </form>
-        <ul class="divide-y divide-slate-50 px-6">
-            @foreach($hardware->observaciones as $observacion)
-                <li class="flex items-start justify-between gap-3 py-3 text-sm text-slate-600">
-                    <span>{{ $observacion->Observacion_Detalle }}<small class="block text-xs text-slate-400">{{ optional($observacion->Observacion_Fecha)->format('d/m/Y') }}</small></span>
-                    <form method="POST" action="{{ route('hardware.observations.destroy', [$hardware->Hw_Serial, $observacion->Observacion_Id]) }}">@csrf @method('DELETE')<button title="Eliminar" class="text-red-500"><i class="bi bi-trash3"></i></button></form>
-                </li>
-            @endforeach
-        </ul>
-    </div>
-
-    <div class="rounded-3xl border border-slate-200 bg-white shadow-card">
-        <header class="border-b border-slate-100 px-6 py-4"><h3 class="text-sm font-bold text-slate-700">Cambio de usuario</h3></header>
-        <form method="POST" action="{{ route('hardware.user-changes.store', $hardware->Hw_Serial) }}" class="space-y-3 px-6 py-4">
-            @csrf
-            <input name="UsuarioActual" required maxlength="30" placeholder="Usuario actual" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
-            <input type="date" name="FechaCambio" value="{{ now()->format('Y-m-d') }}" required class="rounded-xl border border-slate-200 px-3 py-2 text-sm">
-            <button class="rounded-xl bg-brand-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-brand-700">Registrar cambio</button>
-        </form>
-        <ul class="divide-y divide-slate-50 px-6">
-            @foreach($hardware->cambiosDeUsuario as $cambio)
-                <li class="py-3 text-sm text-slate-600">{{ $cambio->UsuarioActual }}<small class="block text-xs text-slate-400">{{ optional($cambio->FechaCambio)->format('d/m/Y') }}</small></li>
-            @endforeach
-        </ul>
+    <div class="rounded-3xl border border-slate-200 bg-white shadow-card" x-data="{ open: true, more: false, limit: 3 }">
+        <button type="button" @click="open = !open" class="flex w-full items-center justify-between gap-3 border-b border-slate-100 px-6 py-4 text-left">
+            <h3 class="text-sm font-bold text-slate-700">Cambio de usuario <span class="font-semibold text-slate-400">({{ $cambiosLista->count() }})</span></h3>
+            <i class="bi bi-chevron-down text-slate-400 transition" :class="open && 'rotate-180'"></i>
+        </button>
+        <div x-show="open" x-cloak>
+            <form method="POST" action="{{ route('hardware.user-changes.store', $hardware->Hw_Serial) }}" class="space-y-3 border-b border-slate-50 px-6 py-4">
+                @csrf
+                <input name="UsuarioActual" required maxlength="30" placeholder="Usuario actual" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                <input type="date" name="FechaCambio" value="{{ now()->format('Y-m-d') }}" required class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                <button class="rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-emerald-700">Registrar cambio</button>
+            </form>
+            <ul class="divide-y divide-slate-50 px-6">
+                @forelse($cambiosLista as $i => $cambio)
+                    <li class="py-3 text-sm text-slate-600" x-show="more || {{ $i }} < limit">
+                        {{ $cambio->UsuarioActual }}
+                        <small class="mt-0.5 block text-xs text-slate-400">{{ optional($cambio->FechaCambio)->format('d/m/Y') }}</small>
+                    </li>
+                @empty
+                    <li class="py-4 text-center text-xs text-slate-400">Sin cambios registrados.</li>
+                @endforelse
+            </ul>
+            @if($cambiosLista->count() > 3)
+                <div class="border-t border-slate-50 px-6 py-3">
+                    <button type="button" @click="more = !more" class="text-xs font-bold text-brand-600 hover:text-brand-700" x-text="more ? 'Ver menos' : 'Ver más ({{ $cambiosLista->count() - 3 }})'"></button>
+                </div>
+            @endif
+        </div>
     </div>
 </div>
 
@@ -222,8 +262,8 @@
             <i class="bi bi-file-earmark-text text-emerald-600 text-lg"></i>
             <h3 class="text-sm font-bold text-slate-700">Actas y documentos adjuntos ({{ $hardware->actas->count() }})</h3>
         </span>
-        <a href="{{ route('hardware.delivery-act', $hardware->Hw_Serial) }}?pdf=1" target="_blank" data-no-loader class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900">
-            <i class="bi bi-filetype-pdf text-red-500"></i> Descargar acta en PDF
+        <a href="{{ route('hardware.delivery-act', $hardware->Hw_Serial) }}?pdf=1" target="_blank" data-no-loader class="inline-flex items-center gap-1.5 rounded-xl bg-red-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-red-700">
+            <i class="bi bi-filetype-pdf"></i> Descargar acta en PDF
         </a>
     </header>
     <div class="border-b border-slate-100 bg-emerald-50/40 p-6">
@@ -321,7 +361,10 @@
                             <span class="inline-flex h-6 w-12 items-center justify-center rounded-lg {{ $hechos->isNotEmpty() ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500' }} text-xs font-bold">{{ $hechos->count() }}/7</span>
                         </td>
                         <td class="px-6 py-3.5 text-right">
-                            <a href="{{ route('mant.show', $m->mantenimiento_Id) }}" class="inline-grid size-8 place-items-center rounded-lg text-slate-400 transition hover:bg-brand-50 hover:text-brand-600"><i class="bi bi-chevron-right"></i></a>
+                            <div class="inline-flex items-center gap-1.5">
+                                <a href="{{ route('mant.pdf', $m->mantenimiento_Id) }}" data-no-loader title="Descargar PDF" class="inline-flex items-center gap-1 rounded-lg bg-red-600 px-2.5 py-1.5 text-[11px] font-bold text-white shadow-sm transition hover:bg-red-700"><i class="bi bi-filetype-pdf"></i>PDF</a>
+                                <a href="{{ route('mant.show', $m->mantenimiento_Id) }}" title="Ver detalle" class="inline-grid size-8 place-items-center rounded-lg bg-brand-600 text-white shadow-sm transition hover:bg-brand-700"><i class="bi bi-chevron-right"></i></a>
+                            </div>
                         </td>
                     </tr>
                 @empty
