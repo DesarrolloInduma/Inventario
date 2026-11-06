@@ -142,7 +142,7 @@
                                 <td class="px-5 py-3.5">
                                     <div class="flex items-center justify-end gap-1 opacity-60 transition group-hover:opacity-100">
                                         <a href="{{ route('catalogo.index', ['tabla' => $tabla, 'edit' => $r->{$cfg['pk']}]) }}" title="Editar"
-                                           class="inline-grid size-8 place-items-center rounded-lg text-slate-400 transition hover:bg-amber-50 hover:text-amber-600"><i class="bi bi-pencil"></i></a>
+                                           class="inline-grid size-8 place-items-center rounded-lg bg-orange-600 text-white shadow-md ring-1 ring-orange-700/40 transition hover:bg-orange-700"><i class="bi bi-pencil-fill"></i></a>
                                         <form method="POST" action="{{ route('catalogo.destroy', [$tabla, $r->{$cfg['pk']}]) }}"
                                               data-confirm="¿Eliminar este registro del catálogo? Si está en uso el sistema lo bloqueará.">
                                             @csrf @method('DELETE')
