@@ -47,7 +47,7 @@
                                 <div class="flex items-center justify-end gap-1 opacity-60 transition group-hover:opacity-100">
                                     <a href="{{ route('softnl.show', $sw->Softwarenl_Id) }}" title="Ver" class="inline-grid size-8 place-items-center rounded-lg text-slate-400 transition hover:bg-brand-50 hover:text-brand-600"><i class="bi bi-eye"></i></a>
                                     @if(auth()->user()->esAdmin())
-                                        <a href="{{ route('softnl.edit', $sw->Softwarenl_Id) }}" title="Editar" class="inline-grid size-8 place-items-center rounded-lg text-slate-400 transition hover:bg-amber-50 hover:text-amber-600"><i class="bi bi-pencil"></i></a>
+                                        <a href="{{ route('softnl.edit', $sw->Softwarenl_Id) }}" title="Editar" class="inline-grid size-8 place-items-center rounded-lg bg-orange-600 text-white shadow-md ring-1 ring-orange-700/40 transition hover:bg-orange-700"><i class="bi bi-pencil-fill"></i></a>
                                     @endif
                                 </div>
                             </td>

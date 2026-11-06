@@ -24,6 +24,15 @@ class CatalogoController extends Controller
             'pk' => 'ModeloID',
             'campos' => [
                 ['col' => 'Nombre', 'label' => 'Nombre del modelo', 'tipo' => 'text', 'req' => true, 'max' => 50, 'unique' => true],
+                [
+                    'col' => 'MarcaID',
+                    'label' => 'Marca',
+                    'tipo' => 'select',
+                    'req' => true,
+                    'options_model' => 'Marca',
+                    'options_value' => 'MarcaID',
+                    'options_label' => 'Nombre',
+                ],
             ],
         ],
         'procesadores' => [
@@ -92,8 +101,16 @@ class CatalogoController extends Controller
                 ['col' => 'Monitor_Modelo', 'label' => 'Modelo', 'tipo' => 'text', 'req' => false, 'max' => 20],
                 ['col' => 'Monitor_Tamaño', 'label' => 'Tamaño', 'tipo' => 'text', 'req' => false, 'max' => 10],
                 ['col' => 'FechaCompra', 'label' => 'Fecha de compra', 'tipo' => 'date', 'req' => true],
-                ['col' => 'VencimientoGarantia', 'label' => 'Vence garantía', 'tipo' => 'date', 'req' => true],
-                ['col' => 'ProveedorID', 'label' => 'ID proveedor', 'tipo' => 'number', 'req' => true],
+                ['col' => 'VencimientoGarantia', 'label' => 'Fin de garantía', 'tipo' => 'date', 'req' => true],
+                [
+                    'col' => 'ProveedorID',
+                    'label' => 'Proveedor',
+                    'tipo' => 'select',
+                    'req' => true,
+                    'options_model' => 'Proveedor',
+                    'options_value' => 'ProveedorID',
+                    'options_label' => 'Nombre',
+                ],
             ],
         ],
         'leasings' => [
@@ -186,6 +203,11 @@ class CatalogoController extends Controller
                 $rule = [$c['req'] ? 'required' : 'nullable', 'date'];
             } elseif ($c['tipo'] === 'email') {
                 $rule = [$c['req'] ? 'required' : 'nullable', 'email', 'max:' . ($c['max'] ?? 100)];
+            } elseif ($c['tipo'] === 'select') {
+                $rule = [$c['req'] ? 'required' : 'nullable'];
+                if (isset($c['options_model'], $c['options_value'])) {
+                    $rule[] = 'exists:' . $c['options_model'] . ',' . $c['options_value'];
+                }
             } else {
                 $rule[] = 'max:' . ($c['max'] ?? 255);
             }

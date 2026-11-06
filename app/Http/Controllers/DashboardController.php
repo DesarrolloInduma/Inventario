@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Auditoria;
 use App\Models\Hardware;
 use App\Models\Hard_Soft;
-use App\Models\Mantenimineto;
+use App\Models\Mantenimiento;
 use App\Models\Software_Licenciado;
 use App\Models\Software_NoLicenciado;
 use App\Models\UsuarioInv;
@@ -39,7 +39,7 @@ class DashboardController extends Controller
         $inicio = now()->subMonths(5)->startOfMonth();
         $mesExpression = SqlServer::yearMonth('mantenimiento_fecha');
 
-        $mantenimientosPorMes = Mantenimineto::query()
+        $mantenimientosPorMes = Mantenimiento::query()
             ->whereNotNull('mantenimiento_fecha')
             ->where('mantenimiento_fecha', '>=', $inicio->toDateString())
             ->selectRaw("{$mesExpression} as mes, COUNT(*) as total")
@@ -66,11 +66,10 @@ class DashboardController extends Controller
             'totalHardware' => Hardware::count(),
             'totalSoftwareLic' => Software_Licenciado::count(),
             'totalSoftwareNl' => Software_NoLicenciado::count(),
-            'totalMantenimientos' => Mantenimineto::count(),
+            'totalMantenimientos' => Mantenimiento::count(),
             'totalAuditorias' => Auditoria::count(),
             'totalUsuariosInv' => UsuarioInv::count(),
 
-            'garantiasVencidas' => Hardware::where('Hw_FechaGarantiaFin', '<', now()->toDateString())->count(),
             'equiposInactivos' => Hardware::where('Activo', false)->count(),
 
             'chartTipos' => [
@@ -91,7 +90,8 @@ class DashboardController extends Controller
             ],
 
             'recientes' => Hardware::with(['tipo', 'modelo.marca', 'usuarioInv'])
-                ->orderByDesc('Hw_FechaCompra')
+                ->orderByDesc('Hw_FechaEntrega')
+                ->orderBy('Hw_Serial')
                 ->take(6)
                 ->get(),
         ]);

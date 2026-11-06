@@ -86,9 +86,9 @@ class HardwareController extends Controller
             'hardware' => new Hardware(),
             'modulo' => $modulo,
             'tipos' => $this->tiposPorModulo($modulo),
-            'modelos' => Modelo::orderBy('Nombre')->get(),
+            'modelos' => Modelo::with('marca')->orderBy('Nombre')->get(),
             'procesadores' => Procesador::orderBy('Nombre')->get(),
-            'monitores' => Monitor::orderBy('MonitorID')->get(),
+            'monitores' => Monitor::with('proveedor')->orderBy('MonitorID')->get(),
             'usuarios' => UsuarioInv::orderBy('UsuarioInvNombre')->get(),
             'propietarios' => Propietario::orderBy('Nombre')->get(),
             'proveedores' => Proveedor::orderBy('Nombre')->get(),
@@ -136,7 +136,7 @@ class HardwareController extends Controller
         if (!$esSimple && $request->filled('observacion')) {
             $hardware->observaciones()->create([
                 'Observacion_Detalle' => $request->input('observacion'),
-                'Observacion_Fecha' => $request->input('observacion_fecha') ?: now()->toDateString(),
+                'Observacion_Fecha' => now()->toDateString(),
             ]);
         }
         if (!$esSimple) {
@@ -158,10 +158,11 @@ class HardwareController extends Controller
     public function show(string $serial)
     {
         $hardware = Hardware::with([
-            'tipo', 'procesador', 'modelo', 'monitor', 'usuarioInv',
+            'tipo', 'procesador', 'modelo.marca', 'monitor.proveedor', 'usuarioInv',
             'propietario', 'proveedor', 'leasing', 'ubicacion', 'seguro',
             'softwaresLicenciados', 'softwaresNoLicenciados',
             'dispositivos', 'mantenimientos', 'observaciones', 'actas',
+            'cambiosDeUsuario',
         ])->findOrFail($serial);
 
         return view('hardware.show', [
@@ -195,9 +196,9 @@ class HardwareController extends Controller
             'hardware' => $hardware,
             'modulo' => $modulo,
             'tipos' => $this->tiposPorModulo($modulo),
-            'modelos' => Modelo::orderBy('Nombre')->get(),
+            'modelos' => Modelo::with('marca')->orderBy('Nombre')->get(),
             'procesadores' => Procesador::orderBy('Nombre')->get(),
-            'monitores' => Monitor::orderBy('MonitorID')->get(),
+            'monitores' => Monitor::with('proveedor')->orderBy('MonitorID')->get(),
             'usuarios' => UsuarioInv::orderBy('UsuarioInvNombre')->get(),
             'propietarios' => Propietario::orderBy('Nombre')->get(),
             'proveedores' => Proveedor::orderBy('Nombre')->get(),
@@ -268,10 +269,12 @@ class HardwareController extends Controller
         $hardware = Hardware::findOrFail($serial);
         $data = $request->validate([
             'Observacion_Detalle' => ['required', 'string', 'max:300'],
-            'Observacion_Fecha' => ['required', 'date'],
         ]);
 
-        $hardware->observaciones()->create($data);
+        $hardware->observaciones()->create([
+            'Observacion_Detalle' => $data['Observacion_Detalle'],
+            'Observacion_Fecha' => now()->toDateString(),
+        ]);
 
         return back()->with('ok', 'Observación registrada.');
     }
@@ -292,9 +295,20 @@ class HardwareController extends Controller
         $data = $request->validate([
             'dispositivos' => ['nullable', 'array'],
             'dispositivos.*' => ['integer', 'exists:Dispositivo,Dispositivo_Codigo'],
+            'validaciones' => ['nullable', 'array'],
+            'validaciones.*' => ['integer', 'exists:Dispositivo,Dispositivo_Codigo'],
         ]);
 
-        $hardware->dispositivos()->sync($data['dispositivos'] ?? []);
+        $seleccionados = collect($data['dispositivos'] ?? [])->map(fn ($id) => (int) $id)->all();
+        $validados = collect($data['validaciones'] ?? [])->map(fn ($id) => (int) $id)->all();
+
+        $sync = [];
+        foreach ($seleccionados as $codigo) {
+            // Validación = periférico verificado físicamente en entrega/inventario.
+            $sync[$codigo] = ['Validacion' => in_array($codigo, $validados, true)];
+        }
+
+        $hardware->dispositivos()->sync($sync);
 
         return back()->with('ok', 'Dispositivos actualizados.');
     }
@@ -318,7 +332,7 @@ class HardwareController extends Controller
                 'UsuarioInvID' => $usuarioId,
                 'UsuarioInvNombre' => $usuarioNombre,
                 'UsuarioInvArea' => 'Sin asignar',
-                'UsuarioInvCorreo' => $usuarioId . '@induma.local',
+                'UsuarioInvCorreo' => $usuarioId . '@induma.com',
             ]);
         }
 
@@ -500,8 +514,8 @@ class HardwareController extends Controller
             'Hw_Ram' => ['nullable', 'string', 'max:50'],
             'Hw_Disco_Duro' => ['nullable', 'string', 'max:50'],
             'Hw_FechaCompra' => ['nullable', 'date'],
-            'Hw_ValorCompra' => ['nullable', 'numeric', 'min:0'],
-            'Hw_FechaGarantiaFin' => ['nullable', 'date'],
+            'Hw_FechaEntrega' => ['nullable', 'date'],
+            'Hw_FechaIngresoInventario' => ['nullable', 'date'],
             'TipoID' => ['required', 'integer', 'exists:Tipo,TipoID'],
             'ModeloID' => ['required', 'integer', 'exists:Modelo,ModeloID'],
             'MonitorID' => ['nullable', 'string', 'exists:Monitor,MonitorID'],
@@ -515,7 +529,7 @@ class HardwareController extends Controller
             'SeguroID' => ['nullable', 'integer', 'exists:Seguro,SeguroID'],
             'Revisado' => ['nullable', 'boolean'],
             'Activo' => ['nullable', 'boolean'],
-            'Hw_FehaRenovacion' => ['nullable', 'date'],
+            'Hw_FechaRenovacion' => ['nullable', 'date'],
             'Hw_Estado' => ['nullable', 'string', 'max:50'],
             'MacEthernet' => ['nullable', 'string', 'max:50', SqlServer::uniqueRule('Hardware', 'MacEthernet', $ignoreSerial, 'Hw_Serial')],
             'MacWireless' => ['nullable', 'string', 'max:50', SqlServer::uniqueRule('Hardware', 'MacWireless', $ignoreSerial, 'Hw_Serial')],
@@ -525,9 +539,6 @@ class HardwareController extends Controller
             $data[$flag] = $request->boolean($flag);
         }
 
-        $data['Hw_FechaCompra'] ??= now()->toDateString();
-        $data['Hw_ValorCompra'] ??= 0;
-        $data['Hw_FechaGarantiaFin'] ??= now()->addYear()->toDateString();
         if ($esSimple) {
             $data['ProcesadorID'] = null;
             $data['UsuarioInvID'] = null;

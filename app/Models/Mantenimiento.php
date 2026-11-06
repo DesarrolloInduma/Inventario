@@ -4,9 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Mantenimineto extends Model
+class Mantenimiento extends Model
 {
-    protected $table = 'Mantenimineto';
+    protected $table = 'Mantenimiento';
     protected $primaryKey = 'mantenimiento_Id';
     public $timestamps = false;
 
@@ -26,5 +26,11 @@ class Mantenimineto extends Model
     public function hardware()
     {
         return $this->belongsTo(Hardware::class, 'Hw_Serial', 'Hw_Serial');
+    }
+
+    public function fotos()
+    {
+        return $this->hasMany(MantenimientoFoto::class, 'mantenimiento_Id', 'mantenimiento_Id')
+            ->orderBy('id');
     }
 }

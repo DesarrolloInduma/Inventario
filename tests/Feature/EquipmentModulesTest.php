@@ -18,7 +18,7 @@ class EquipmentModulesTest extends TestCase
 
     public function test_printer_and_camera_creation_forms_only_show_general_fields(): void
     {
-        $user = User::factory()->create(['Role' => 'admin']);
+        $user = User::factory()->create(['role' => 'admin']);
 
         foreach ([['impresoras.create', 'Impresora'], ['camaras.create', 'Cámara']] as [$route, $label]) {
             Tipo::firstOrCreate(['Nombre' => $label]);
@@ -37,7 +37,7 @@ class EquipmentModulesTest extends TestCase
 
     public function test_printers_and_cameras_can_be_created_with_general_fields_only(): void
     {
-        $user = User::factory()->create(['Role' => 'admin']);
+        $user = User::factory()->create(['role' => 'admin']);
         $modelo = Modelo::create(['Nombre' => 'Modelo básico']);
         $propietario = Propietario::create(['Nombre' => 'Local']);
         $proveedor = Proveedor::create(['ProveedorID' => 'PROV-LOCAL', 'Nombre' => 'Proveedor local']);

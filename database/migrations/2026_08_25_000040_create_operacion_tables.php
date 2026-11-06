@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreign('Dispositivo_Codigo')->references('Dispositivo_Codigo')->on('Dispositivo');
         });
 
-        Schema::create('Mantenimineto', function (Blueprint $table) {
+        Schema::create('Mantenimiento', function (Blueprint $table) {
             $table->increments('mantenimiento_Id');
             $table->string('Hw_Serial', 50)->nullable();
             $table->boolean('mantenimiento_RFE_C')->nullable();
@@ -86,7 +86,7 @@ return new class extends Migration
         Schema::dropIfExists('Cambio_de_Usuario');
         Schema::dropIfExists('Auditoria');
         Schema::dropIfExists('Observaciones');
-        Schema::dropIfExists('Mantenimineto');
+        Schema::dropIfExists('Mantenimiento');
         Schema::dropIfExists('hardware_dispositivos');
     }
 };

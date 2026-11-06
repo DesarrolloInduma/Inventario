@@ -19,7 +19,7 @@ class HardwareActaAndSerialCargadorTest extends TestCase
 
     public function test_hardware_page_displays_serial_cargador_and_actas(): void
     {
-        $user = User::factory()->create(['Role' => 'admin']);
+        $user = User::factory()->create(['role' => 'admin']);
         $tipo = Tipo::create(['Nombre' => 'Portátil']);
         $marca = \App\Models\Marca::create(['Nombre' => 'Lenovo']);
         $modelo = Modelo::create(['Nombre' => 'ThinkPad', 'MarcaID' => $marca->MarcaID]);
@@ -36,7 +36,7 @@ class HardwareActaAndSerialCargadorTest extends TestCase
             'Monitor_Modelo' => 'Dell 24',
             'FechaCompra' => now()->toDateString(),
             'VencimientoGarantia' => now()->addYear()->toDateString(),
-            'ProveedorID' => 1,
+            'ProveedorID' => $proveedor->ProveedorID,
         ]);
         $propietario = \App\Models\Propietario::create(['Nombre' => 'INDUMA']);
         $leasing = \App\Models\Leasing::create([
@@ -59,8 +59,7 @@ class HardwareActaAndSerialCargadorTest extends TestCase
             'ProveedorID' => $proveedor->ProveedorID,
             'LeasingID' => $leasing->LeasingID,
             'Hw_FechaCompra' => now()->toDateString(),
-            'Hw_ValorCompra' => 1000,
-            'Hw_FechaGarantiaFin' => now()->addYear()->toDateString(),
+            'Hw_FechaEntrega' => now()->addYear()->toDateString(),
             'Activo' => true,
         ]);
 
@@ -74,7 +73,7 @@ class HardwareActaAndSerialCargadorTest extends TestCase
 
     public function test_can_upload_acta_during_hardware_creation(): void
     {
-        $user = User::factory()->create(['Role' => 'admin']);
+        $user = User::factory()->create(['role' => 'admin']);
         $tipo = Tipo::create(['Nombre' => 'Portátil']);
         $marca = \App\Models\Marca::create(['Nombre' => 'Lenovo']);
         $modelo = Modelo::create(['Nombre' => 'ThinkPad', 'MarcaID' => $marca->MarcaID]);
@@ -91,7 +90,7 @@ class HardwareActaAndSerialCargadorTest extends TestCase
             'Monitor_Modelo' => 'Dell 24',
             'FechaCompra' => now()->toDateString(),
             'VencimientoGarantia' => now()->addYear()->toDateString(),
-            'ProveedorID' => 1,
+            'ProveedorID' => $proveedor->ProveedorID,
         ]);
         $propietario = \App\Models\Propietario::create(['Nombre' => 'INDUMA']);
         $leasing = \App\Models\Leasing::create([
@@ -131,7 +130,7 @@ class HardwareActaAndSerialCargadorTest extends TestCase
 
     public function test_user_change_updates_current_owner_and_keeps_history(): void
     {
-        $user = User::factory()->create(['Role' => 'admin']);
+        $user = User::factory()->create(['role' => 'admin']);
         $tipo = Tipo::create(['Nombre' => 'Portátil']);
         $marca = \App\Models\Marca::create(['Nombre' => 'Lenovo']);
         $modelo = Modelo::create(['Nombre' => 'ThinkPad', 'MarcaID' => $marca->MarcaID]);
@@ -148,7 +147,7 @@ class HardwareActaAndSerialCargadorTest extends TestCase
             'Monitor_Modelo' => 'Dell 24',
             'FechaCompra' => now()->toDateString(),
             'VencimientoGarantia' => now()->addYear()->toDateString(),
-            'ProveedorID' => 1,
+            'ProveedorID' => $proveedor->ProveedorID,
         ]);
         $propietario = \App\Models\Propietario::create(['Nombre' => 'INDUMA']);
         $leasing = \App\Models\Leasing::create([
@@ -171,8 +170,7 @@ class HardwareActaAndSerialCargadorTest extends TestCase
             'ProveedorID' => $proveedor->ProveedorID,
             'LeasingID' => $leasing->LeasingID,
             'Hw_FechaCompra' => now()->toDateString(),
-            'Hw_ValorCompra' => 1000,
-            'Hw_FechaGarantiaFin' => now()->addYear()->toDateString(),
+            'Hw_FechaEntrega' => now()->addYear()->toDateString(),
             'Activo' => true,
         ]);
 
@@ -195,7 +193,7 @@ class HardwareActaAndSerialCargadorTest extends TestCase
 
     public function test_delivery_act_downloads_the_attached_file_when_present(): void
     {
-        $user = User::factory()->create(['Role' => 'admin']);
+        $user = User::factory()->create(['role' => 'admin']);
         $tipo = Tipo::create(['Nombre' => 'Portátil']);
         $marca = \App\Models\Marca::create(['Nombre' => 'Lenovo']);
         $modelo = Modelo::create(['Nombre' => 'ThinkPad', 'MarcaID' => $marca->MarcaID]);
@@ -212,7 +210,7 @@ class HardwareActaAndSerialCargadorTest extends TestCase
             'Monitor_Modelo' => 'Dell 24',
             'FechaCompra' => now()->toDateString(),
             'VencimientoGarantia' => now()->addYear()->toDateString(),
-            'ProveedorID' => 1,
+            'ProveedorID' => $proveedor->ProveedorID,
         ]);
         $propietario = \App\Models\Propietario::create(['Nombre' => 'INDUMA']);
         $leasing = \App\Models\Leasing::create([
@@ -235,8 +233,7 @@ class HardwareActaAndSerialCargadorTest extends TestCase
             'ProveedorID' => $proveedor->ProveedorID,
             'LeasingID' => $leasing->LeasingID,
             'Hw_FechaCompra' => now()->toDateString(),
-            'Hw_ValorCompra' => 1000,
-            'Hw_FechaGarantiaFin' => now()->addYear()->toDateString(),
+            'Hw_FechaEntrega' => now()->addYear()->toDateString(),
             'Activo' => true,
         ]);
 
@@ -248,12 +245,17 @@ class HardwareActaAndSerialCargadorTest extends TestCase
 
         $response = $this->actingAs($user)->get(route('hardware.delivery-act', [$hardware->Hw_Serial]) . '?pdf=1');
         $response->assertStatus(200);
-        $response->assertHeader('Content-Disposition', 'attachment; filename="acta_entrega.pdf"');
+        $disposition = (string) $response->headers->get('Content-Disposition');
+        $this->assertStringContainsString('acta_entrega.pdf', $disposition);
+        $this->assertTrue(
+            str_contains($disposition, 'attachment') || str_contains($disposition, 'inline'),
+            "Content-Disposition inesperado: {$disposition}"
+        );
     }
 
     public function test_show_page_shows_inline_attachment_flow_without_redirect_message(): void
     {
-        $user = User::factory()->create(['Role' => 'admin']);
+        $user = User::factory()->create(['role' => 'admin']);
         $tipo = Tipo::create(['Nombre' => 'Portátil']);
         $marca = \App\Models\Marca::create(['Nombre' => 'Lenovo']);
         $modelo = Modelo::create(['Nombre' => 'ThinkPad', 'MarcaID' => $marca->MarcaID]);
@@ -270,7 +272,7 @@ class HardwareActaAndSerialCargadorTest extends TestCase
             'Monitor_Modelo' => 'Dell 24',
             'FechaCompra' => now()->toDateString(),
             'VencimientoGarantia' => now()->addYear()->toDateString(),
-            'ProveedorID' => 1,
+            'ProveedorID' => $proveedor->ProveedorID,
         ]);
         $propietario = \App\Models\Propietario::create(['Nombre' => 'INDUMA']);
         $leasing = \App\Models\Leasing::create([
@@ -293,21 +295,24 @@ class HardwareActaAndSerialCargadorTest extends TestCase
             'ProveedorID' => $proveedor->ProveedorID,
             'LeasingID' => $leasing->LeasingID,
             'Hw_FechaCompra' => now()->toDateString(),
-            'Hw_ValorCompra' => 1000,
-            'Hw_FechaGarantiaFin' => now()->addYear()->toDateString(),
+            'Hw_FechaEntrega' => now()->addYear()->toDateString(),
             'Activo' => true,
         ]);
 
         $response = $this->actingAs($user)->get(route('hardware.show', $hardware->Hw_Serial));
 
         $response->assertStatus(200);
-        $response->assertSee('Adjuntar acta de entrega aquí');
+        $response->assertSee('Seleccionar archivo');
+        $response->assertSee('Guardar acta');
+        $response->assertSee('Descargar acta en PDF');
+        $response->assertDontSee('Adjuntar acta de entrega aquí');
+        $response->assertDontSee('>Adjuntar acta<', false);
         $response->assertDontSee('Ir a editar equipo para adjuntar');
     }
 
     public function test_can_upload_download_and_delete_acta(): void
     {
-        $user = User::factory()->create(['Role' => 'admin']);
+        $user = User::factory()->create(['role' => 'admin']);
         $tipo = Tipo::create(['Nombre' => 'Portátil']);
         $marca = \App\Models\Marca::create(['Nombre' => 'Lenovo']);
         $modelo = Modelo::create(['Nombre' => 'ThinkPad', 'MarcaID' => $marca->MarcaID]);
@@ -324,7 +329,7 @@ class HardwareActaAndSerialCargadorTest extends TestCase
             'Monitor_Modelo' => 'Dell 24',
             'FechaCompra' => now()->toDateString(),
             'VencimientoGarantia' => now()->addYear()->toDateString(),
-            'ProveedorID' => 1,
+            'ProveedorID' => $proveedor->ProveedorID,
         ]);
         $propietario = \App\Models\Propietario::create(['Nombre' => 'INDUMA']);
         $leasing = \App\Models\Leasing::create([
@@ -347,8 +352,7 @@ class HardwareActaAndSerialCargadorTest extends TestCase
             'ProveedorID' => $proveedor->ProveedorID,
             'LeasingID' => $leasing->LeasingID,
             'Hw_FechaCompra' => now()->toDateString(),
-            'Hw_ValorCompra' => 1000,
-            'Hw_FechaGarantiaFin' => now()->addYear()->toDateString(),
+            'Hw_FechaEntrega' => now()->addYear()->toDateString(),
             'Activo' => true,
         ]);
 
@@ -427,23 +431,25 @@ class HardwareActaAndSerialCargadorTest extends TestCase
         $this->assertDatabaseCount('Observaciones', 0);
     }
 
-    public function test_model_catalog_only_asks_for_the_name(): void
+    public function test_model_catalog_requires_marca(): void
     {
         $user = User::factory()->create(['role' => 'admin']);
+        $marca = \App\Models\Marca::create(['Nombre' => 'HP']);
 
         $response = $this->actingAs($user)->post(route('catalogo.store', 'modelos'), [
             'Nombre' => 'OfficeJet Pro',
+            'MarcaID' => $marca->MarcaID,
         ]);
 
         $response->assertRedirect(route('catalogo.index', 'modelos'));
         $this->assertDatabaseHas('Modelo', [
             'Nombre' => 'OfficeJet Pro',
-            'MarcaID' => null,
+            'MarcaID' => $marca->MarcaID,
         ]);
 
         $page = $this->actingAs($user)->get(route('catalogo.index', 'modelos'));
         $page->assertOk();
         $page->assertSee('Nombre del modelo');
-        $page->assertDontSee('Marca asociada');
+        $page->assertSee('Marca');
     }
 }

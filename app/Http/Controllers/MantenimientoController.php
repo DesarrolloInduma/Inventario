@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Hardware;
-use App\Models\Mantenimineto;
+use App\Models\Mantenimiento;
+use App\Models\MantenimientoFoto;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class MantenimientoController extends Controller
 {
@@ -22,7 +25,7 @@ class MantenimientoController extends Controller
     {
         $q = trim((string) $request->query('q'));
 
-        $mantenimientos = Mantenimineto::with('hardware')
+        $mantenimientos = Mantenimiento::with('hardware')
             ->when($q !== '', function ($query) use ($q) {
                 $query->whereTextLike('Hw_Serial', "%{$q}%")
                     ->orWhereTextLike('mantenimiento_Recibe', "%{$q}%")
@@ -52,13 +55,15 @@ class MantenimientoController extends Controller
         Hardware::findOrFail($serial);
 
         $data = $this->validated($request);
+        unset($data['fotos']);
         $data['Hw_Serial'] = $serial;
 
         foreach (array_keys(self::CHECKS) as $k) {
             $data["mantenimiento_{$k}_C"] = $request->boolean("mantenimiento_{$k}_C");
         }
 
-        Mantenimineto::create($data);
+        $mantenimiento = Mantenimiento::create($data);
+        $this->storeFotos($request, $mantenimiento);
 
         return redirect()
             ->route('hardware.show', $serial)
@@ -68,15 +73,35 @@ class MantenimientoController extends Controller
     public function show(string $id)
     {
         return view('mantenimiento.show', [
-            'mantenimiento' => Mantenimineto::with('hardware')->findOrFail($id),
+            'mantenimiento' => Mantenimiento::with(['hardware', 'fotos'])->findOrFail($id),
             'checks' => self::CHECKS,
         ]);
     }
 
+    public function pdf(string $id)
+    {
+        $mantenimiento = Mantenimiento::with(['hardware.usuarioInv', 'hardware.modelo.marca', 'fotos'])
+            ->findOrFail($id);
+
+        $pdf = Pdf::loadView('mantenimiento.pdf', [
+            'mantenimiento' => $mantenimiento,
+            'checks' => self::CHECKS,
+        ])->setPaper('a4');
+
+        $filename = 'mantenimiento-'.$mantenimiento->mantenimiento_Id.'.pdf';
+
+        return $pdf->download($filename);
+    }
+
     public function destroy(string $id)
     {
-        $mant = Mantenimineto::findOrFail($id);
+        $mant = Mantenimiento::with('fotos')->findOrFail($id);
         $serial = $mant->Hw_Serial;
+
+        foreach ($mant->fotos as $foto) {
+            $foto->delete();
+        }
+
         $mant->delete();
 
         return redirect()
@@ -98,6 +123,36 @@ class MantenimientoController extends Controller
             'mantenimiento_LTYM_O' => ['nullable', 'string', 'max:300'],
             'mantenimiento_LM_O' => ['nullable', 'string', 'max:300'],
             'mantenimiento_O_O' => ['nullable', 'string', 'max:300'],
+            'fotos' => ['nullable', 'array', 'max:8'],
+            'fotos.*' => ['image', 'mimes:jpeg,jpg,png,webp,gif', 'max:5120'],
         ]);
+    }
+
+    private function storeFotos(Request $request, Mantenimiento $mantenimiento): void
+    {
+        if (! $request->hasFile('fotos')) {
+            return;
+        }
+
+        $dir = 'mantenimientos/'.$mantenimiento->mantenimiento_Id;
+        Storage::disk('public')->makeDirectory($dir);
+
+        foreach ($request->file('fotos') as $file) {
+            if (! $file->isValid()) {
+                continue;
+            }
+
+            $safeName = uniqid().'_'.preg_replace('/[^a-zA-Z0-9._-]/', '_', $file->getClientOriginalName());
+            $path = $file->storeAs($dir, $safeName, 'public');
+
+            MantenimientoFoto::create([
+                'mantenimiento_Id' => $mantenimiento->mantenimiento_Id,
+                'archivo_path' => $path,
+                'nombre_original' => $file->getClientOriginalName(),
+                'mime_type' => $file->getClientMimeType() ?: 'image/jpeg',
+                'tamanio' => $file->getSize(),
+                'created_at' => now(),
+            ]);
+        }
     }
 }

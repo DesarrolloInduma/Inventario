@@ -57,9 +57,19 @@
             <select name="ModeloID" required class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm">
                 <option value="">Seleccione...</option>
                 @foreach($modelos as $m)
-                    <option value="{{ $m->ModeloID }}" @selected(old('ModeloID',$hardware->ModeloID ?? '') == $m->ModeloID)>{{ $m->Nombre }}</option>
+                    <option value="{{ $m->ModeloID }}" @selected(old('ModeloID',$hardware->ModeloID ?? '') == $m->ModeloID)>{{ trim(($m->marca->Nombre ?? '') . ' ' . $m->Nombre) }}</option>
                 @endforeach
             </select>
+        </label>
+        <label class="text-sm font-semibold text-slate-600">
+            Fecha de ingreso al inventario
+            <input type="date" name="Hw_FechaIngresoInventario" value="{{ old('Hw_FechaIngresoInventario', isset($hardware) && $hardware->Hw_FechaIngresoInventario ? $hardware->Hw_FechaIngresoInventario->format('Y-m-d') : '') }}" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm">
+            <span class="mt-1 block text-xs font-normal text-slate-400">Cuándo el equipo quedó registrado en el inventario.</span>
+        </label>
+        <label class="text-sm font-semibold text-slate-600">
+            Fecha de entrega
+            <input type="date" name="Hw_FechaEntrega" value="{{ old('Hw_FechaEntrega', isset($hardware) && $hardware->Hw_FechaEntrega ? $hardware->Hw_FechaEntrega->format('Y-m-d') : '') }}" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm">
+            <span class="mt-1 block text-xs font-normal text-slate-400">Día del préstamo al usuario (no devolución ni fin de leasing).</span>
         </label>
     </div>
 </section>
@@ -71,7 +81,7 @@
         <div class="grid gap-4 p-6 sm:grid-cols-2 lg:grid-cols-3">
             <label class="text-sm font-semibold text-slate-600">Nombre del procesador *<input name="procesador_nombre" :required="!esSimple" maxlength="50" value="{{ old('procesador_nombre',$hardware->procesador?->Nombre ?? '') }}" placeholder="Ej: Intel Core i5-12400" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm"></label>
             <label class="text-sm font-semibold text-slate-600">Velocidad<input name="procesador_velocidad" maxlength="10" value="{{ old('procesador_velocidad',$hardware->procesador?->Velocidad ?? '') }}" placeholder="Ej: 2.50 GHz" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm"></label>
-            @foreach([['Hw_Ram','RAM','Ej: 16 GB'],['Hw_Disco_Duro','Disco duro','Ej: SSD 512 GB'],['Hw_Estado','Estado','Ej: Bueno'],['MacEthernet','MAC Ethernet',''],['MacWireless','MAC Wireless','']] as [$name,$label,$placeholder])
+            @foreach([['Hw_Ram','RAM','Ej: 16 GB'],['Hw_Disco_Duro','Disco duro','Ej: SSD 512 GB'],['Hw_Estado','Estado físico','Ej: Bueno'],['MacEthernet','MAC Ethernet',''],['MacWireless','MAC Wireless','']] as [$name,$label,$placeholder])
                 <label class="text-sm font-semibold text-slate-600">{{ $label }}<input name="{{ $name }}" value="{{ old($name,$hardware->$name ?? '') }}" maxlength="50" placeholder="{{ $placeholder }}" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 font-mono text-sm"></label>
             @endforeach
         </div>
@@ -95,7 +105,7 @@
 <section class="rounded-3xl border border-slate-200 bg-white shadow-card">
     <fieldset class="m-0 min-w-0 border-0 p-0">
         <header class="border-b border-slate-100 px-6 py-4"><h3 class="font-bold text-slate-700"><i class="bi bi-chat-left-text mr-2 text-emerald-600"></i>6. Observaciones</h3></header>
-        <div class="p-6"><textarea name="observacion" maxlength="300" rows="3" placeholder="Observaciones iniciales..." class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm"></textarea><input type="date" name="observacion_fecha" value="{{ now()->format('Y-m-d') }}" class="mt-3 rounded-xl border border-slate-200 px-3 py-2 text-sm"></div>
+        <div class="p-6"><textarea name="observacion" maxlength="300" rows="3" placeholder="Observaciones iniciales..." class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm"></textarea></div>
     </fieldset>
 </section>
 
