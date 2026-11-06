@@ -27,4 +27,10 @@ class Mantenimiento extends Model
     {
         return $this->belongsTo(Hardware::class, 'Hw_Serial', 'Hw_Serial');
     }
+
+    public function fotos()
+    {
+        return $this->hasMany(MantenimientoFoto::class, 'mantenimiento_Id', 'mantenimiento_Id')
+            ->orderBy('id');
+    }
 }

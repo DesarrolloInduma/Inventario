@@ -81,6 +81,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/mantenimientos', [MantenimientoController::class, 'index'])->name('mant.index');
     Route::get('/hardware/{serial}/mantenimientos/crear', [MantenimientoController::class, 'create'])->name('mant.create');
     Route::post('/hardware/{serial}/mantenimientos', [MantenimientoController::class, 'store'])->name('mant.store');
+    Route::get('/mantenimientos/{id}/pdf', [MantenimientoController::class, 'pdf'])->name('mant.pdf');
     Route::get('/mantenimientos/{id}', [MantenimientoController::class, 'show'])->name('mant.show');
     Route::delete('/mantenimientos/{id}', [MantenimientoController::class, 'destroy'])->name('mant.destroy');
 

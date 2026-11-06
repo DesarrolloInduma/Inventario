@@ -57,8 +57,12 @@
                                 </div>
                             </td>
                             <td class="px-5 py-3.5">
-                                <a href="{{ route('mant.show', $m->mantenimiento_Id) }}" title="Ver detalle"
-                                   class="inline-grid size-8 place-items-center rounded-lg text-slate-400 opacity-60 transition hover:bg-brand-50 hover:text-brand-600 group-hover:opacity-100"><i class="bi bi-chevron-right"></i></a>
+                                <div class="flex items-center justify-end gap-1">
+                                    <a href="{{ route('mant.pdf', $m->mantenimiento_Id) }}" title="Descargar PDF" data-no-loader
+                                       class="inline-grid size-8 place-items-center rounded-lg text-slate-400 opacity-60 transition hover:bg-red-50 hover:text-red-600 group-hover:opacity-100"><i class="bi bi-filetype-pdf"></i></a>
+                                    <a href="{{ route('mant.show', $m->mantenimiento_Id) }}" title="Ver detalle"
+                                       class="inline-grid size-8 place-items-center rounded-lg text-slate-400 opacity-60 transition hover:bg-brand-50 hover:text-brand-600 group-hover:opacity-100"><i class="bi bi-chevron-right"></i></a>
+                                </div>
                             </td>
                         </tr>
                     @empty

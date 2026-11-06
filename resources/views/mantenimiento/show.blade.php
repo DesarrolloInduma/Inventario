@@ -69,12 +69,32 @@
                 </li>
             @endforeach
             <li class="py-4">
+                <p class="mb-1 text-sm font-semibold text-slate-600"><i class="bi bi-image mr-1 text-slate-400"></i>Foto gráfico</p>
+                @if($mantenimiento->fotos->isNotEmpty())
+                    <div class="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        @foreach($mantenimiento->fotos as $foto)
+                            <a href="{{ $foto->urlPublica() }}" target="_blank" class="group overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                                <img src="{{ $foto->urlPublica() }}" alt="{{ $foto->nombre_original }}" class="aspect-video w-full object-cover transition group-hover:opacity-90">
+                                <p class="truncate px-3 py-2 text-xs text-slate-500">{{ $foto->nombre_original }}</p>
+                            </a>
+                        @endforeach
+                    </div>
+                @else
+                    <p class="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-400">Sin fotos adjuntas.</p>
+                @endif
+            </li>
+            <li class="py-4">
                 <p class="mb-1 text-sm font-semibold text-slate-600"><i class="bi bi-journal-text mr-1 text-slate-400"></i>Observaciones generales</p>
                 <p class="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-500">{{ $mantenimiento->mantenimiento_Observaciones ?? 'Sin observaciones.' }}</p>
             </li>
         </ul>
     </div>
 
-    <a href="{{ route('mant.index') }}" class="mt-5 mb-2 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-brand-600"><i class="bi bi-arrow-left"></i>Volver a mantenimientos</a>
+    <div class="mt-5 mb-2 flex flex-wrap items-center gap-3">
+        <a href="{{ route('mant.index') }}" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-brand-600"><i class="bi bi-arrow-left"></i>Volver a mantenimientos</a>
+        <a href="{{ route('mant.pdf', $mantenimiento->mantenimiento_Id) }}" data-no-loader class="ml-auto inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-brand-700">
+            <i class="bi bi-filetype-pdf"></i> Descargar PDF
+        </a>
+    </div>
 </div>
 @endsection

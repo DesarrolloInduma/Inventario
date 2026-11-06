@@ -4,7 +4,7 @@
 @section('page_title', 'Registrar mantenimiento')
 
 @section('content')
-<form method="POST" action="{{ route('mant.store', $hardware->Hw_Serial) }}"
+<form method="POST" action="{{ route('mant.store', $hardware->Hw_Serial) }}" enctype="multipart/form-data"
       x-data="{ enviando: false, hechos: 0 }" x-on:submit="enviando = true"
       class="mx-auto max-w-4xl">
     @csrf
@@ -86,6 +86,14 @@
                     </div>
                 </li>
             @endforeach
+            <li class="py-4">
+                <p class="mb-1.5 text-sm font-semibold text-slate-600"><i class="bi bi-image mr-1 text-slate-400"></i>Foto gráfico</p>
+                <p class="mb-2 text-xs text-slate-400">Adjunta capturas o fotos del mantenimiento (JPG, PNG, WEBP o GIF · máx. 5 MB c/u · hasta 8).</p>
+                <input type="file" name="fotos[]" accept="image/jpeg,image/png,image/webp,image/gif" multiple
+                       class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-600 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white hover:file:bg-brand-700">
+                @error('fotos')<span class="mt-1 flex items-center gap-1 text-xs font-medium text-red-600"><i class="bi bi-exclamation-circle"></i>{{ $message }}</span>@enderror
+                @error('fotos.*')<span class="mt-1 flex items-center gap-1 text-xs font-medium text-red-600"><i class="bi bi-exclamation-circle"></i>{{ $message }}</span>@enderror
+            </li>
             <li class="py-4">
                 <p class="mb-1.5 text-sm font-semibold text-slate-600"><i class="bi bi-journal-text mr-1 text-slate-400"></i>Observaciones generales</p>
                 <textarea name="mantenimiento_Observaciones" rows="2" maxlength="300"
