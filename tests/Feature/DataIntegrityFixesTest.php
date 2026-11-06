@@ -33,7 +33,8 @@ class DataIntegrityFixesTest extends TestCase
         $this->assertSame('16 GB', $hardware->Hw_Ram);
         $this->assertSame('Bueno', $hardware->Hw_Estado);
         $this->assertSame('2024-01-15', $hardware->Hw_FechaCompra->toDateString());
-        $this->assertSame('2024-01-15', $hardware->Hw_FechaEntrega->toDateString());
+        $this->assertSame('2024-01-15', $hardware->Hw_FechaIngresoInventario->toDateString());
+        $this->assertSame('2024-01-20', $hardware->Hw_FechaEntrega->toDateString());
         $this->assertFalse(Schema::hasColumn('Hardware', 'Hw_ValorCompra'));
 
         $this->assertDatabaseHas('Modelo', [
@@ -118,6 +119,7 @@ class DataIntegrityFixesTest extends TestCase
             ->assertOk()
             ->assertSee('Estado físico')
             ->assertSee('Fecha de entrega')
+            ->assertSee('Fecha de ingreso al inventario')
             ->assertSee('16 GB')
             ->assertSee('Intel Core i5-10300H')
             ->assertSee('Validado')
@@ -135,7 +137,9 @@ class DataIntegrityFixesTest extends TestCase
             ->get(route('hardware.create'))
             ->assertOk()
             ->assertSee('name="Hw_FechaEntrega"', false)
+            ->assertSee('name="Hw_FechaIngresoInventario"', false)
             ->assertSee('Fecha de entrega')
+            ->assertSee('Fecha de ingreso al inventario')
             ->assertSee('Día del préstamo')
             ->assertDontSee('ValorCompra');
 
@@ -143,6 +147,8 @@ class DataIntegrityFixesTest extends TestCase
             ->get(route('hardware.edit', $hardware->Hw_Serial))
             ->assertOk()
             ->assertSee('name="Hw_FechaEntrega"', false)
+            ->assertSee('name="Hw_FechaIngresoInventario"', false)
+            ->assertSee('value="2024-01-20"', false)
             ->assertSee('value="2024-01-15"', false);
 
         $this->actingAs($user)->put(route('hardware.update', $hardware->Hw_Serial), [
@@ -161,6 +167,7 @@ class DataIntegrityFixesTest extends TestCase
             'Hw_Disco_Duro' => $hardware->Hw_Disco_Duro,
             'Hw_Estado' => $hardware->Hw_Estado,
             'Hw_FechaEntrega' => '2025-06-20',
+            'Hw_FechaIngresoInventario' => '2025-05-01',
             'procesador_nombre' => $hardware->procesador->Nombre,
             'procesador_velocidad' => $hardware->procesador->Velocidad,
             'usuario_id' => $hardware->usuarioInv->UsuarioInvID,
@@ -172,7 +179,9 @@ class DataIntegrityFixesTest extends TestCase
             'Revisado' => 1,
         ])->assertRedirect(route('hardware.show', $hardware->Hw_Serial));
 
-        $this->assertSame('2025-06-20', $hardware->fresh()->Hw_FechaEntrega->toDateString());
+        $fresh = $hardware->fresh();
+        $this->assertSame('2025-06-20', $fresh->Hw_FechaEntrega->toDateString());
+        $this->assertSame('2025-05-01', $fresh->Hw_FechaIngresoInventario->toDateString());
     }
 
     public function test_migration_repairs_orphan_monitor_and_inactive_state_conflict(): void

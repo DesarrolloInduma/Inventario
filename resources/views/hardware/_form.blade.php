@@ -62,6 +62,11 @@
             </select>
         </label>
         <label class="text-sm font-semibold text-slate-600">
+            Fecha de ingreso al inventario
+            <input type="date" name="Hw_FechaIngresoInventario" value="{{ old('Hw_FechaIngresoInventario', isset($hardware) && $hardware->Hw_FechaIngresoInventario ? $hardware->Hw_FechaIngresoInventario->format('Y-m-d') : '') }}" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm">
+            <span class="mt-1 block text-xs font-normal text-slate-400">Cuándo el equipo quedó registrado en el inventario.</span>
+        </label>
+        <label class="text-sm font-semibold text-slate-600">
             Fecha de entrega
             <input type="date" name="Hw_FechaEntrega" value="{{ old('Hw_FechaEntrega', isset($hardware) && $hardware->Hw_FechaEntrega ? $hardware->Hw_FechaEntrega->format('Y-m-d') : '') }}" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm">
             <span class="mt-1 block text-xs font-normal text-slate-400">Día del préstamo al usuario (no devolución ni fin de leasing).</span>

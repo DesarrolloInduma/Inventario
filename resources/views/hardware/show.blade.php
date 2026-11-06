@@ -89,6 +89,7 @@
             @foreach([
                 ['Usuario asignado', trim(($hardware->usuarioInv?->UsuarioInvNombre ?? '') . (($hardware->usuarioInv?->UsuarioInvArea ?? null) ? ' · ' . $hardware->usuarioInv->UsuarioInvArea : '')) ?: null, 'bi-person-check'],
                 ['Monitor', trim(($hardware->monitor?->MonitorID ?? '') . ' ' . ($hardware->monitor?->Monitor_Modelo ?? '')) ?: null, 'bi-display'],
+                ['Fecha de ingreso al inventario', $hardware->Hw_FechaIngresoInventario?->format('d/m/Y'), 'bi-calendar-plus'],
                 ['Fecha de entrega', $hardware->Hw_FechaEntrega?->format('d/m/Y'), 'bi-box-arrow-in-right'],
                 ['Propietario', $hardware->propietario->Nombre ?? null, 'bi-building'],
                 ['Proveedor', $hardware->proveedor->Nombre ?? null, 'bi-truck'],

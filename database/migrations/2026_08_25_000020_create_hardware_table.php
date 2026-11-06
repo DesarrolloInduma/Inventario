@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('Hw_Disco_Duro', 50)->nullable();
             $table->date('Hw_FechaCompra')->nullable();
             $table->date('Hw_FechaEntrega')->nullable();
+            $table->date('Hw_FechaIngresoInventario')->nullable();
             $table->unsignedInteger('TipoID');
             $table->unsignedInteger('ModeloID');
             $table->string('MonitorID', 50);

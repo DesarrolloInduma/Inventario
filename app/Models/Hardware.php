@@ -21,6 +21,7 @@ class Hardware extends Model
     protected $casts = [
         'Hw_FechaCompra' => 'date',
         'Hw_FechaEntrega' => 'date',
+        'Hw_FechaIngresoInventario' => 'date',
         'Hw_FechaRenovacion' => 'date',
         'Revisado' => 'boolean',
         'Activo' => 'boolean',
